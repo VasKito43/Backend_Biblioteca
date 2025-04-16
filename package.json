@@ -19,6 +19,8 @@
   },
   "homepage": "https://github.com/VasKito43/Backend_Biblioteca#readme",
   "dependencies": {
-    "express": "^5.1.0"
+    "body-parser": "^2.2.0",
+    "express": "^5.1.0",
+    "express-handlebars": "^8.0.1"
   }
 }
