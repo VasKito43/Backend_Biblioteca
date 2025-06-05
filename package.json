@@ -1,26 +1,22 @@
 {
-  "name": "backend_biblioteca",
+  "name": "aulabd",
   "version": "1.0.0",
-  "description": "backend para o projeto de sistema de uma biblioteca",
   "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "node --watch app.js",
-    "start": "node app.js"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/VasKito43/Backend_Biblioteca.git"
-  },
-  "author": "Vaskito",
+  "author": "",
   "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/VasKito43/Backend_Biblioteca/issues"
-  },
-  "homepage": "https://github.com/VasKito43/Backend_Biblioteca#readme",
+  "description": "",
   "dependencies": {
     "body-parser": "^2.2.0",
+    "bootstrap": "^5.3.6",
+    "dotenv": "^16.5.0",
     "express": "^5.1.0",
-    "express-handlebars": "^8.0.1"
+    "express-fileupload": "^1.5.1",
+    "express-handlebars": "^8.0.2",
+    "md5": "^2.3.0",
+    "nodemailer": "^7.0.3",
+    "pg": "^8.14.1"
   }
 }

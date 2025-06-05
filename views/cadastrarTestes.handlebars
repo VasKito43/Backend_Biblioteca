@@ -1,0 +1,20 @@
+{{!-- views/cadastrarTeste.handlebars --}}
+<div class="container mt-4">
+  <h2>Cadastrar Novo Teste</h2>
+  <form action="/cadastrarTeste" method="POST" enctype="multipart/form-data">
+    <div class="mb-3">
+      <label for="nome" class="form-label">Nome:</label>
+      <input type="text" class="form-control" id="nome" name="nome" placeholder="Digite o nome do teste" required>
+    </div>
+    <div class="mb-3">
+      <label for="valor" class="form-label">Valor:</label>
+      <input type="text" class="form-control" id="valor" name="valor" placeholder="Digite o valor" required>
+    </div>
+    <div class="mb-3">
+      <label for="imagem" class="form-label">Imagem (opcional):</label>
+      <input type="file" class="form-control" id="imagem" name="imagem">
+    </div>
+    <button type="submit" class="btn btn-success">Cadastrar</button>
+    <a href="/listarTestes" class="btn btn-secondary ms-2">Cancelar</a>
+  </form>
+</div>

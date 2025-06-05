@@ -1,0 +1,32 @@
+{{#extends 'main'}}
+{{#block 'body'}}
+<div class="container mt-4">
+  <h2>Alterar Produto</h2>
+  <form action="/alterarProduto" method="POST" enctype="multipart/form-data">
+    <input type="hidden" name="id_produto" value="{{produto.id_produto}}">
+
+    <div class="mb-3">
+      <label class="form-label">Nome:</label>
+      <input type="text" name="nome" class="form-control" value="{{produto.nome}}" required>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Valor:</label>
+      <input type="number" name="valor" step="0.01" class="form-control" value="{{produto.valor}}" required>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Imagem Atual:</label><br>
+      <img src="/imagens/{{produto.id_produto}}.{{produto.imagem}}" class="img-thumbnail" style="max-width:200px;">
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Nova Imagem:</label>
+      <input type="file" name="imagem" accept="image/*" class="form-control">
+    </div>
+
+    <button class="btn btn-success">Salvar</button>
+    <a href="/cadastrarProduto" class="btn btn-secondary ms-2">Cancelar</a>
+  </form>
+</div>
+{{/block}}

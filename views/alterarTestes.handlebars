@@ -1,0 +1,42 @@
+{{!-- views/alterarTeste.handlebars --}}
+<div class="container mt-4">
+  <h2>Alterar Teste</h2>
+  <form action="/alterarTeste" method="POST" enctype="multipart/form-data">
+    <input type="hidden" name="id_teste" value="{{teste.id_teste}}">
+
+    <div class="mb-3">
+      <label for="nome" class="form-label">Nome:</label>
+      <input
+        type="text"
+        class="form-control"
+        id="nome"
+        name="nome"
+        value="{{teste.nome}}"
+        required
+      >
+    </div>
+
+    <div class="mb-3">
+      <label for="valor" class="form-label">Valor:</label>
+      <input
+        type="text"
+        class="form-control"
+        id="valor"
+        name="valor"
+        value="{{teste.valor}}"
+        required
+      >
+    </div>
+
+    <div class="mb-3">
+      <label for="imagem" class="form-label">Nova Imagem (opcional):</label>
+      <input type="file" class="form-control" id="imagem" name="imagem">
+      {{#if teste.caminhoImagem}}
+        <small class="form-text text-muted">Imagem atual: <a href="{{teste.caminhoImagem}}" target="_blank">ver</a></small>
+      {{/if}}
+    </div>
+
+    <button type="submit" class="btn btn-warning">Salvar Alterações</button>
+    <a href="/listarTestes" class="btn btn-secondary ms-2">Cancelar</a>
+  </form>
+</div>
