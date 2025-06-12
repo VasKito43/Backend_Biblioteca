@@ -2,9 +2,10 @@
   "name": "aulabd",
   "version": "1.0.0",
   "main": "app.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "vite",
+ "scripts": {
+    "dev": "concurrently \"npm:dev:server\" \"npm:dev:client\"",
+    "dev:server": "nodemon app.js",
+    "dev:client": "vite",
     "build": "vite build",
     "preview": "vite preview"
   },
@@ -29,6 +30,8 @@
   },
   "devDependencies": {
     "autoprefixer": "^10.4.21",
+    "concurrently": "^9.1.2",
+    "nodemon": "^3.1.10",
     "postcss": "^8.5.5",
     "tailwindcss": "^4.1.10"
   }

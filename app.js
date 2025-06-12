@@ -1,15 +1,16 @@
-// app.js
 const path = require('path');
 const express = require('express');
 const handlebars = require('express-handlebars');
 const bodyParser = require('body-parser');
 const fileupload = require('express-fileupload');
 
-const produtoController = require('./controller/produto.controller');
-const Produto = require('./entidades/produto');
+// Ajuste do path: pasta singular 'controller'
+const userController = require('./controller/users.controller')
+const testeController = require('././controller/teste.controller');
+const Teste = require('././entidades/teste');
 
-const testeController = require('./controller/teste.controller');
-const Teste = require('./entidades/teste');
+const userController = require('././controller/user.controller');
+const User = require('././entidades/user');
 
 const app = express();
 const port = 8086;
@@ -45,195 +46,152 @@ app.use(bodyParser.json());
 app.use(fileupload());
 
 // -----------------------------
-// ROTAS DE PRODUTO (mantive como estavam)
+// ROTAS DE TESTE
 // -----------------------------
-
-// Rota GET: abrir formulário de cadastro + mostrar lista de produtos
-app.get('/cadastrarProduto', async (req, res) => {
+app.get('/listarUsers', async (req, res) => {
   try {
-    const produtos = await produtoController.listarProdutos();
-    res.render('cadastroProduto', { produtos });
-  } catch (erro) {
-    console.error('Erro ao listar produtos:', erro);
-    res.status(500).send('Erro ao carregar página de cadastro de produtos.');
-  }
-});
-
-// Rota POST: cadastrar novo produto
-app.post('/cadastrarProduto', async (req, res) => {
-  try {
-    const { nome, valor } = req.body;
-    const imagemFile = req.files?.imagem;
-    let caminhoImagemNoBanco = null;
-
-    if (imagemFile) {
-      const uploadPath = path.join(__dirname, 'imagens', imagemFile.name);
-      await imagemFile.mv(uploadPath);
-      caminhoImagemNoBanco = `/imagens/${imagemFile.name}`;
-    }
-
-    const novoProduto = new Produto(nome, valor, caminhoImagemNoBanco);
-    const resultado = await produtoController.cadastrarProduto(novoProduto);
-    console.log('Produto gravado com sucesso:', resultado);
-
-    return res.redirect('/cadastrarProduto');
-  } catch (erro) {
-    console.error('Erro ao cadastrar produto:', erro);
-    return res
-      .status(500)
-      .send('Ocorreu um erro ao cadastrar o produto. Verifique o console.');
-  }
-});
-
-// Rota GET: abrir formulário para alterar um produto específico
-app.get('/alterarProduto/:id', async (req, res) => {
-  try {
-    const lista = await produtoController.listarProdutos();
-    const prod = lista.find((p) => p.id_produto == req.params.id);
-    if (!prod) {
-      return res.status(404).send('Produto não encontrado.');
-    }
-    return res.render('alterarProduto', { produto: prod });
-  } catch (erro) {
-    console.error('Erro ao carregar formulário de alteração:', erro);
-    return res.status(500).send('Erro ao carregar formulário de alteração.');
-  }
-});
-
-// Rota POST: processar alteração de produto
-app.post('/alterarProduto', async (req, res) => {
-  try {
-    const { nome, valor, id_produto } = req.body;
-    const imagemFile = req.files?.imagem;
-    let caminhoImagemNoBanco = null;
-
-    if (imagemFile) {
-      const uploadPath = path.join(__dirname, 'imagens', imagemFile.name);
-      await imagemFile.mv(uploadPath);
-      caminhoImagemNoBanco = `/imagens/${imagemFile.name}`;
-    }
-
-    const alt = new Produto(nome, valor, caminhoImagemNoBanco);
-    alt.id = id_produto;
-    const resultado = await produtoController.alterarProduto(alt);
-    console.log('Produto alterado com sucesso:', resultado);
-
-    return res.redirect('/cadastrarProduto');
-  } catch (erro) {
-    console.error('Erro ao alterar produto:', erro);
-    return res.status(500).send('Ocorreu um erro ao alterar o produto.');
-  }
-});
-
-// Rota POST: remover produto
-app.post('/removerProduto', async (req, res) => {
-  try {
-    const { id_produto } = req.body;
-    const resultado = await produtoController.removerProduto(id_produto);
-    console.log('Produto removido com sucesso:', resultado);
-    return res.redirect('/cadastrarProduto');
-  } catch (erro) {
-    console.error('Erro ao remover produto:', erro);
-    return res.status(500).send('Ocorreu um erro ao remover o produto.');
-  }
-});
-
-// -----------------------------
-// ROTAS DE TESTE (ajustadas para não dar “Cannot GET”)
-// -----------------------------
-
-// Rota GET: listar todos os testes e renderizar a view listarTestes.handlebars
-app.get('/listarTestes', async (req, res) => {
-  try {
-    const testes = await testeController.listarTestes();
-    return res.render('listarTestes', { testes });
+    const testes = await userController.listarUsers();
+    res.render('listarTestes', { testes });
   } catch (erro) {
     console.error('Erro ao listar testes:', erro);
-    return res.status(500).send('Erro ao carregar a lista de testes.');
+    res.status(500).send('Erro ao carregar a lista de testes.');
   }
 });
 
-// Rota GET: abrir formulário de cadastro de teste (caso queira criar novos)
-app.get('/cadastrarTeste', (req, res) => {
-  // Essa view deve conter um <form action="/cadastrarTeste" method="POST" enctype="multipart/form-data">
-  return res.render('cadastrarTeste');
-});
+app.get('/cadastrarTeste', (req, res) => res.render('cadastrarTeste'));
 
-// Rota POST: cadastrar um novo teste
 app.post('/cadastrarTeste', async (req, res) => {
   try {
     const { nome, valor } = req.body;
     const imagemFile = req.files?.imagem;
     let caminhoImagemNoBanco = null;
-
     if (imagemFile) {
       const uploadPath = path.join(__dirname, 'imagens', imagemFile.name);
       await imagemFile.mv(uploadPath);
       caminhoImagemNoBanco = `/imagens/${imagemFile.name}`;
     }
-
-    // Supondo que o construtor de Teste aceite (nome, valor, caminhoImagem)
     const novoTeste = new Teste(nome, valor, caminhoImagemNoBanco);
-    const resultado = await testeController.cadastrarTeste(novoTeste);
-    console.log('Teste cadastrado com sucesso:', resultado);
-
-    return res.redirect('/listarTestes');
+    await testeController.cadastrarTeste(novoTeste);
+    res.redirect('/listarTestes');
   } catch (erro) {
     console.error('Erro ao cadastrar teste:', erro);
-    return res.status(500).send('Ocorreu um erro ao cadastrar o teste.');
+    res.status(500).send('Ocorreu um erro ao cadastrar o teste.');
   }
 });
 
-// Rota GET: abrir formulário para alterar um teste específico
 app.get('/alterarTeste/:id', async (req, res) => {
   try {
     const lista = await testeController.listarTestes();
-    const teste = lista.find((t) => t.id_teste == req.params.id);
-    if (!teste) {
-      return res.status(404).send('Teste não encontrado.');
-    }
-    return res.render('alterarTeste', { teste });
+    const teste = lista.find(t => t.id_teste == req.params.id);
+    if (!teste) return res.status(404).send('Teste não encontrado.');
+    res.render('alterarTeste', { teste });
   } catch (erro) {
     console.error('Erro ao carregar formulário de alteração de teste:', erro);
-    return res.status(500).send('Erro ao carregar formulário de alteração.');
+    res.status(500).send('Erro ao carregar formulário de alteração.');
   }
 });
 
-// Rota POST: processar alteração de teste
 app.post('/alterarTeste', async (req, res) => {
   try {
     const { id_teste, nome, valor } = req.body;
     const imagemFile = req.files?.imagem;
     let caminhoImagemNoBanco = null;
-
     if (imagemFile) {
       const uploadPath = path.join(__dirname, 'imagens', imagemFile.name);
       await imagemFile.mv(uploadPath);
       caminhoImagemNoBanco = `/imagens/${imagemFile.name}`;
     }
-
     const testeAlterado = new Teste(nome, valor, caminhoImagemNoBanco);
     testeAlterado.id = id_teste;
-    const resultado = await testeController.alterarTeste(testeAlterado);
-    console.log('Teste alterado com sucesso:', resultado);
-
-    return res.redirect('/listarTestes');
+    await testeController.alterarTeste(testeAlterado);
+    res.redirect('/listarTestes');
   } catch (erro) {
     console.error('Erro ao alterar teste:', erro);
-    return res.status(500).send('Ocorreu um erro ao alterar o teste.');
+    res.status(500).send('Ocorreu um erro ao alterar o teste.');
   }
 });
 
-// Rota POST: remover teste
 app.post('/removerTeste', async (req, res) => {
   try {
     const { id_teste } = req.body;
-    const resultado = await testeController.removerTeste(id_teste);
-    console.log('Teste removido com sucesso:', resultado);
-    return res.redirect('/listarTestes');
+    await testeController.removerTeste(id_teste);
+    res.redirect('/listarTestes');
   } catch (erro) {
     console.error('Erro ao remover teste:', erro);
-    return res.status(500).send('Ocorreu um erro ao remover o teste.');
+    res.status(500).send('Ocorreu um erro ao remover o teste.');
+  }
+});
+
+// -----------------------------
+// ROTAS DE USUÁRIO (Handlebars)
+// -----------------------------
+app.get('/listarUsers', async (req, res) => {
+  try {
+    const users = await userController.listarUsers();
+    res.render('listarUsers', { users });
+  } catch (erro) {
+    console.error('Erro ao listar usuários:', erro);
+    res.status(500).send('Erro ao carregar a lista de usuários.');
+  }
+});
+
+app.get('/cadastrarUser', (req, res) => res.render('cadastrarUser'));
+app.post('/cadastrarUser', async (req, res) => {
+  try {
+    const { nome, email, senha } = req.body;
+    const novoUser = new User(nome, email, senha);
+    await userController.cadastrarUser(novoUser);
+    res.redirect('/listarUsers');
+  } catch (erro) {
+    console.error('Erro ao cadastrar usuário:', erro);
+    res.status(500).send('Ocorreu um erro ao cadastrar o usuário.');
+  }
+});
+
+app.get('/alterarUser/:id', async (req, res) => {
+  try {
+    const lista = await userController.listarUsers();
+    const user = lista.find(u => u.id_user == req.params.id);
+    if (!user) return res.status(404).send('Usuário não encontrado.');
+    res.render('alterarUser', { user });
+  } catch (erro) {
+    console.error('Erro ao carregar formulário de alteração de usuário:', erro);
+    res.status(500).send('Erro ao carregar formulário de alteração.');
+  }
+});
+app.post('/alterarUser', async (req, res) => {
+  try {
+    const { id_user, nome, email, senha } = req.body;
+    const userAlt = new User(nome, email, senha);
+    userAlt.id = id_user;
+    await userController.alterarUser(userAlt);
+    res.redirect('/listarUsers');
+  } catch (erro) {
+    console.error('Erro ao alterar usuário:', erro);
+    res.status(500).send('Ocorreu um erro ao alterar o usuário.');
+  }
+});
+app.post('/removerUser', async (req, res) => {
+  try {
+    const { id_user } = req.body;
+    await userController.removerUser(id_user);
+    res.redirect('/listarUsers');
+  } catch (erro) {
+    console.error('Erro ao remover usuário:', erro);
+    res.status(500).send('Ocorreu um erro ao remover o usuário.');
+  }
+});
+
+// -----------------------------
+// ROTA API JSON PARA USERS
+// -----------------------------
+app.get('/api/users', async (req, res) => {
+  try {
+    const users = await userController.listarUsers();
+    res.json(users);
+  } catch (erro) {
+    console.error('Erro na API /api/users:', erro);
+    res.status(500).json({ error: 'Erro ao buscar usuários.' });
   }
 });
 
@@ -242,7 +200,6 @@ app.post('/removerTeste', async (req, res) => {
 // -----------------------------
 app.listen(port, async () => {
   console.log(`Servidor rodando na porta ${port}...`);
-  // Teste rápido de conexão com o banco de dados (opcional)
   try {
     const todosTestes = await testeController.listarTestes();
     console.log(`Conexão OK: ${todosTestes.length} teste(s) cadastrado(s) no banco.`);
