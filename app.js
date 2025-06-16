@@ -5,12 +5,14 @@ const bodyParser = require('body-parser');
 const fileupload = require('express-fileupload');
 
 // Ajuste do path: pasta singular 'controller'
-const userController = require('./controller/users.controller')
+const userController = require('././controller/users.controller')
 const testeController = require('././controller/teste.controller');
+const bookController = require('././controller/books.controller');
 const Teste = require('././entidades/teste');
 
-const userController = require('././controller/user.controller');
-const User = require('././entidades/user');
+const User = require('././entidades/users');
+const Book = require('././entidades/books');
+
 
 const app = express();
 const port = 8086;
@@ -55,6 +57,16 @@ app.get('/listarUsers', async (req, res) => {
   } catch (erro) {
     console.error('Erro ao listar testes:', erro);
     res.status(500).send('Erro ao carregar a lista de testes.');
+  }
+});
+
+app.get('/api/books', async (req, res) => {
+  try {
+    const books = await bookController.listarBooks();
+    res.json(books);
+  } catch (erro) {
+    console.error('Erro na API /api/books:', erro);
+    res.status(500).json({ error: 'Erro ao buscar livros.' });
   }
 });
 
@@ -189,6 +201,7 @@ app.get('/api/users', async (req, res) => {
   try {
     const users = await userController.listarUsers();
     res.json(users);
+    // console.log(users)
   } catch (erro) {
     console.error('Erro na API /api/users:', erro);
     res.status(500).json({ error: 'Erro ao buscar usuários.' });
