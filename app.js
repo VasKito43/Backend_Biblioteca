@@ -13,8 +13,7 @@ const Teste = require('././entidades/teste');
 const userController = require('././controller/users.controller');
 const User = require('./entidades/users');
 
-const User = require('././entidades/users');
-const Book = require('././entidades/books');
+
 
 
 
