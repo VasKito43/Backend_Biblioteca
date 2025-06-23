@@ -39,7 +39,7 @@
         <div v-for="book in filteredBooks" :key="book.isbn" class="book-card">
           <div class="image-wrapper">
             <img
-              :src="book.linkImg || getCoverUrl(book.isbn)"
+              :src="book.linkimg || getCoverUrl(book.isbn)"
               @error="onImageError($event, book)"
               alt="Capa do livro"
               class="book-image"
