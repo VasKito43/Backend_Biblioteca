@@ -5,19 +5,17 @@ const db = require('../config/database');
  */
 exports.listarUsers = async () => {
   const { rows } = await db.query(
-    `SELECT 
-       register AS id_user, 
-       name, 
-       date_birth AS dateBirth, 
-       email, 
-       phone, 
-       debts, 
-       address_id AS addressId, 
-       type_id AS typeId, 
-       stats_user_id AS statsUserId, 
-       link_img AS linkImg 
-     FROM users 
-     ORDER BY register`
+    `SELECT
+  register      AS id_user,
+  name          AS nome,
+  date_birth    AS "dateBirth",
+  email         AS email,
+  phone         AS phone,
+  debts         AS debts,
+  link_img      AS "linkImg"
+FROM users
+ORDER BY register;
+`
   );
   return rows;
 };

@@ -5,12 +5,11 @@ const bodyParser = require('body-parser');
 const fileupload = require('express-fileupload');
 
 // Ajuste do path: pasta singular 'controller'
-const userController = require('./controller/users.controller')
 const testeController = require('././controller/teste.controller');
 const Teste = require('././entidades/teste');
 
-const userController = require('././controller/user.controller');
-const User = require('././entidades/user');
+const userController = require('././controller/users.controller');
+const User = require('./entidades/users');
 
 const app = express();
 const port = 8086;
@@ -47,16 +46,6 @@ app.use(fileupload());
 
 // -----------------------------
 // ROTAS DE TESTE
-// -----------------------------
-app.get('/listarUsers', async (req, res) => {
-  try {
-    const testes = await userController.listarUsers();
-    res.render('listarTestes', { testes });
-  } catch (erro) {
-    console.error('Erro ao listar testes:', erro);
-    res.status(500).send('Erro ao carregar a lista de testes.');
-  }
-});
 
 app.get('/cadastrarTeste', (req, res) => res.render('cadastrarTeste'));
 
