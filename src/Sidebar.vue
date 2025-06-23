@@ -19,6 +19,7 @@
           <li><button @click="$router.push('/books')" class="nav-btn">Books</button></li>
           <li><button @click="$router.push('/users')" class="nav-btn">Users</button></li>
           <li><button @click="$router.push('/borrowing')" class="nav-btn">Borrowing</button></li>
+          <li><button @click="$router.push('/borrowing/create')" class="nav-btn">Novo Empréstimo</button></li>
         </ul>
       </nav>
     </aside>
