@@ -31,12 +31,20 @@
           <button @click="handleSearch" class="button search-button">
             Pesquisar
           </button>
+          <router-link to="/register" class="button search-button">
+            Cadastrar
+          </router-link>
         </div>
       </div>
 
       <!-- Grid de livros -->
       <div class="books-grid">
-        <div v-for="book in filteredBooks" :key="book.isbn" class="book-card">
+        <router-link
+          v-for="book in filteredBooks"
+          :key="book.isbn"
+          :to="`/update/${book.isbn}`"
+          class="book-card"
+        >
           <div class="image-wrapper">
             <img
               :src="book.linkimg || getCoverUrl(book.isbn)"
@@ -52,7 +60,7 @@
           <p class="book-description">
             Registrado em: {{ formatDate(book.registerDate) }}
           </p>
-        </div>
+        </router-link>
       </div>
     </main>
   </div>
@@ -86,11 +94,9 @@ export default {
     }
   },
   async created() {
-    // Inicializa o modo escuro baseado no localStorage ou preferência do sistema
     const saved = localStorage.getItem('darkMode')
     this.darkMode = saved !== null ? saved === 'true' : window.matchMedia('(prefers-color-scheme: dark)').matches;
 
-    // Busca livros da API
     try {
       const res = await fetch('/api/books');
       if (!res.ok) throw new Error('Erro ao carregar livros');
@@ -115,7 +121,6 @@ export default {
     },
     onImageError(event, book) {
       const img = event.target;
-      // Tenta fallback por ISBN, senão placeholder local
       if (img.src !== this.getCoverUrl(book.isbn)) {
         img.src = this.getCoverUrl(book.isbn);
       } else {
@@ -136,7 +141,7 @@ export default {
   min-height: 100vh;
   background-color: #f9fafb;
 }
-.dark-mode.container {
+.dark-mode .container {
   background-color: #2d3748;
 }
 .main-content {
@@ -188,6 +193,8 @@ export default {
   display: flex;
   flex-direction: column;
   transition: transform 0.2s;
+  text-decoration: none;
+  color: inherit;
 }
 .book-card:hover {
   transform: translateY(-4px);
