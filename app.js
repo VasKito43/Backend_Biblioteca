@@ -10,6 +10,8 @@ const testeController = require('./controller/teste.controller');
 const bookController = require('./controller/books.controller');
 const userController = require('./controller/users.controller');
 const borrowingController = require('./controller/borrowings.controller');
+const db = require('./config/database'); // Pra consultas diretas
+
 
 
 // entidades
@@ -179,16 +181,66 @@ app.get('/api/borrowings', async (req, res) => {
 // Cadastrar empréstimo
 app.post('/api/borrowings', async (req, res) => {
   try {
-    const { userRegister, bookIsbn, librarianRegister, statsId, dateBorrowing, returnDate } = req.body;
-    const created = await borrowingController.criarBorrowing(
-      userRegister, librarianRegister, bookIsbn, statsId, dateBorrowing, returnDate
+    const {
+      user_register,
+      librarian_register,
+      book_isbn,
+      date_borrowing,
+      return_date
+    } = req.body;
+
+    // 1) Verificar usuário ativo
+    const userCheck = await db.query(
+      `SELECT su.name AS status 
+         FROM users u
+         JOIN stats_users su ON u.stats_user_id = su.id
+        WHERE u.register = $1`,
+      [user_register]
     );
-    res.status(201).json(created);
-  } catch (erro) {
-    console.error('Erro na API POST /api/borrowings:', erro);
-    res.status(500).json({ error: 'Erro ao cadastrar empréstimo.' });
+    if (userCheck.rowCount === 0 || userCheck.rows[0].status !== 'active') {
+      return res.status(400).json({ error: 'Usuário não ativo ou não encontrado.' });
+    }
+
+    // 2) Verificar livro disponível
+    const bookCheck = await db.query(
+      `SELECT quantity_available 
+         FROM books 
+        WHERE isbn = $1`,
+      [book_isbn]
+    );
+    if (bookCheck.rowCount === 0) {
+      return res.status(404).json({ error: 'Livro não encontrado.' });
+    }
+    if (bookCheck.rows[0].quantity_available <= 0) {
+      return res.status(400).json({ error: 'Livro sem cópias disponíveis.' });
+    }
+
+    // 3) Cadastrar o empréstimo
+    const created = await borrowingController.cadastrarBorrowing(
+      user_register,
+      librarian_register,
+      book_isbn,
+      /* stats_id: */ 1,          // ou outro status padrão
+      date_borrowing,
+      return_date
+    );
+
+    // 4) Decrementar estoque do livro
+    await db.query(
+      `UPDATE books
+          SET quantity_available = quantity_available - 1
+        WHERE isbn = $1`,
+      [book_isbn]
+    );
+
+    return res.status(201).json(created);
+
+  } catch (err) {
+    console.error('Erro ao criar empréstimo:', err);
+    return res.status(500).json({ error: 'Erro ao criar empréstimo.' });
   }
 });
+
 
 
 // =============================

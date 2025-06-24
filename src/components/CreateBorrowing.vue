@@ -30,7 +30,7 @@
         </div>
 
         <!-- Livro -->
-        <div class="form-group">
+        <div class="form-group form-group-mt">
           <label for="book">Livro</label>
           <input
             id="book"
@@ -54,7 +54,7 @@
           </ul>
         </div>
 
-        <button type="submit" class="submit-btn">Cadastrar Empréstimo</button>
+        <button type="submit" class="submit-btn form-group-mt">Cadastrar Empréstimo</button>
       </form>
     </main>
   </div>
@@ -70,6 +70,8 @@ export default {
     return {
       users: [],
       books: [],
+      showUserDropdown: false,
+      showBookDropdown: false,
       form: {
         userRegister: '',
         userRegisterId: '',
@@ -84,14 +86,15 @@ export default {
       if (!term) return [];
       return this.users.filter(user => {
         const name = (user.name || '').toLowerCase();
-        return name.includes(term);
+        return user.statsUserId === 1 && name.includes(term);
       });
     },
+    
     filteredBooks() {
-      const term = this.form.bookQuery.toLowerCase().trim();
+      const term = (this.form.bookQuery || '').toLowerCase().trim();
       if (!term) return [];
       return this.books.filter(book =>
-        book.title.toLowerCase().includes(term)
+        book.title.toLowerCase().includes(term) && book.quantityAvailable > 0
       );
     }
   },
@@ -99,18 +102,16 @@ export default {
     async fetchUsers() {
       try {
         const res = await fetch('/api/users');
-        if (!res.ok) throw new Error('Erro ao buscar usuários');
         const raw = await res.json();
-        if (!Array.isArray(raw)) {
-          console.error('Resposta /api/users não é array:', raw);
-          this.users = [];
-          return;
-        }
-        this.users = raw.map(u => ({
-          id_user: u.register || u.id_user,
-          name: u.nome || u.name,
-          email: u.email
-        }));;
+        console.log(raw)
+        this.users = Array.isArray(raw)
+          ? raw.map(u => ({
+              id_user: u.register || u.id_user,
+              name: u.nome || u.name,
+              email: u.email,
+              statsUserId: u.statsUserId
+            }))
+          : [];
       } catch (err) {
         console.error('Erro ao carregar usuários', err);
         this.users = [];
@@ -119,13 +120,13 @@ export default {
     async fetchBooks() {
       try {
         const res = await fetch('/api/books');
-        if (!res.ok) throw new Error('Erro ao buscar livros');
         const raw = await res.json();
         this.books = raw.map(b => ({
           isbn: b.isbn,
           title: b.title,
           author: b.author || (b.authors && b.authors.join(', ')) || '',
-          linkImg: b.link_img  // corrige para o campo JSON correto
+          linkImg: b.linkimg,
+          quantityAvailable: b.quantityavailable
         }));
       } catch (err) {
         console.error('Erro ao carregar livros', err);
@@ -134,20 +135,56 @@ export default {
     selectUser(user) {
       this.form.userRegister = user.name;
       this.form.userRegisterId = user.id_user;
+      this.showUserDropdown = false;
     },
     selectBook(book) {
       this.form.bookQuery = book.title;
       this.form.bookIsbn = book.isbn;
+      this.showBookDropdown = false;
     },
     fallbackCover(isbn) {
       return `https://covers.openlibrary.org/b/isbn/${isbn}-S.jpg`;
     },
-    submitForm() {
-      console.log({
-        userRegister: this.form.userRegisterId,
-        bookIsbn: this.form.bookIsbn
-      });
+    async submitForm() {
+    if (!this.form.userRegisterId || !this.form.bookIsbn) {
+      alert('Por favor, selecione um usuário e um livro.');
+      return;
     }
+  
+    const borrowingData = {
+      user_register: this.form.userRegisterId,
+      librarian_register: 1, // fixo por enquanto
+      book_isbn: this.form.bookIsbn,
+      date_borrowing: new Date().toISOString().split('T')[0],
+      return_date: null
+    };
+  
+    try {
+      const res = await fetch('/api/borrowings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(borrowingData)
+      });
+    
+      if (!res.ok) {
+        throw new Error(`Erro ao cadastrar empréstimo: ${res.statusText}`);
+      }
+    
+      alert('Empréstimo cadastrado com sucesso!');
+      // Limpar formulário, se quiser
+      this.form.userRegister = '';
+      this.form.userRegisterId = '';
+      this.form.bookQuery = '';
+      this.form.bookIsbn = '';
+    
+    } catch (err) {
+      console.error(err);
+      alert('Ocorreu um erro ao cadastrar o empréstimo.');
+    }
+  }
+
   },
   created() {
     this.fetchUsers();
@@ -155,6 +192,12 @@ export default {
   }
 }
 </script>
+
+<!-- NO TEMPLATE: 
+  - acrescente @input nos <input>
+  - use showUserDropdown e showBookDropdown no v-if das <ul>
+-->
+
 
 <style scoped>
 .container {
@@ -248,5 +291,9 @@ h1 {
 
 .submit-btn:hover {
   background: #2563eb;
+}
+
+.form-group-mt{
+  margin-top: 10vh;
 }
 </style>

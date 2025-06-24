@@ -12,7 +12,8 @@ exports.listarUsers = async () => {
   email         AS email,
   phone         AS phone,
   debts         AS debts,
-  link_img      AS "linkImg"
+  link_img      AS "linkImg",
+  stats_user_id AS "statsUserId"
 FROM users
 ORDER BY register;
 `
