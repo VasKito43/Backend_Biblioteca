@@ -9,6 +9,8 @@ const fileupload = require('express-fileupload');
 const testeController = require('./controller/teste.controller');
 const bookController = require('./controller/books.controller');
 const userController = require('./controller/users.controller');
+const borrowingController = require('./controller/borrowings.controller');
+
 
 // entidades
 const Teste = require('./entidades/teste');
@@ -131,8 +133,62 @@ app.delete('/api/books/:isbn', async (req, res) => {
   }
 });
 
+// =============================
+// ROTAS DE API JSON DE USERS
+// =============================
 
-// (Suas demais rotas Handlebars e de usuários seguem abaixo, sem alteração…)
+// Listar todos os usuários
+app.get('/api/users', async (req, res) => {
+  try {
+    const users = await userController.listarUsers();
+    res.json(users);
+  } catch (erro) {
+    console.error('Erro na API /api/users:', erro);
+    res.status(500).json({ error: 'Erro ao buscar usuários.' });
+  }
+});
+
+// Buscar um usuário por ID (se precisar)
+app.get('/api/users/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await userController.buscarUserPorId(id);
+    if (!user) return res.status(404).json({ error: 'Usuário não encontrado.' });
+    res.json(user);
+  } catch (erro) {
+    console.error('Erro na API GET /api/users/:id:', erro);
+    res.status(500).json({ error: 'Erro ao buscar usuário.' });
+  }
+});
+
+// =============================
+// ROTAS DE API JSON DE BORROWINGS
+// =============================
+
+// Listar empréstimos
+app.get('/api/borrowings', async (req, res) => {
+  try {
+    const loans = await borrowingController.listarBorrowings();
+    res.json(loans);
+  } catch (erro) {
+    console.error('Erro na API /api/borrowings:', erro);
+    res.status(500).json({ error: 'Erro ao buscar empréstimos.' });
+  }
+});
+
+// Cadastrar empréstimo
+app.post('/api/borrowings', async (req, res) => {
+  try {
+    const { userRegister, bookIsbn, librarianRegister, statsId, dateBorrowing, returnDate } = req.body;
+    const created = await borrowingController.criarBorrowing(
+      userRegister, librarianRegister, bookIsbn, statsId, dateBorrowing, returnDate
+    );
+    res.status(201).json(created);
+  } catch (erro) {
+    console.error('Erro na API POST /api/borrowings:', erro);
+    res.status(500).json({ error: 'Erro ao cadastrar empréstimo.' });
+  }
+});
 
 
 // =============================
