@@ -22,6 +22,7 @@
               :key="user.id_user"
               @click="selectUser(user)"
               class="option-item"
+              :class="['option-item', { blocked: user.statsUserId !== 1 }]"
             >
               {{ user.name }}<br />
               <small>{{ user.email }}</small>
@@ -74,7 +75,8 @@ export default {
       showBookDropdown: false,
       form: {
         userRegister: '',
-        userRegisterId: '',
+        userRegisterId: null,
+        userStatsId: null,
         bookQuery: '',
         bookIsbn: ''
       }
@@ -86,7 +88,7 @@ export default {
       if (!term) return [];
       return this.users.filter(user => {
         const name = (user.name || '').toLowerCase();
-        return user.statsUserId === 1 && name.includes(term);
+        return name.includes(term);
       });
     },
     
@@ -133,10 +135,11 @@ export default {
       }
     },
     selectUser(user) {
-      this.form.userRegister = user.name;
-      this.form.userRegisterId = user.id_user;
-      this.showUserDropdown = false;
-    },
+       this.form.userRegister    = user.name;
+       this.form.userRegisterId  = user.id_user;
+       this.form.userStatsId     = user.statsUserId;
+       this.showUserDropdown     = false;
+     },
     selectBook(book) {
       this.form.bookQuery = book.title;
       this.form.bookIsbn = book.isbn;
@@ -146,6 +149,10 @@ export default {
       return `https://covers.openlibrary.org/b/isbn/${isbn}-S.jpg`;
     },
     async submitForm() {
+    if (this.form.userStatsId !== 2) {
+       alert('Usuário não pode realizar empréstimo: pendências existentes.');
+       return;
+     }
     if (!this.form.userRegisterId || !this.form.bookIsbn) {
       alert('Por favor, selecione um usuário e um livro.');
       return;
@@ -295,5 +302,9 @@ h1 {
 
 .form-group-mt{
   margin-top: 10vh;
+}
+
+.option-item.blocked {
+  color: red;
 }
 </style>
