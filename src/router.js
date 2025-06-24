@@ -1,4 +1,3 @@
-// src/router/index.js
 import { createRouter, createWebHistory } from 'vue-router'
 
 import Login            from './components/Login.vue'
@@ -8,6 +7,7 @@ import UpdateBooks      from './components/UpdateBooks.vue'
 import UsersPage        from './components/UsersPage.vue'
 import BorrowingPage    from './components/Borrowing.vue'
 import CreateBorrowing  from './components/CreateBorrowing.vue'
+import PayBorrowings    from './components/PayBorrowings.vue'
 
 const routes = [
   {
@@ -45,6 +45,11 @@ const routes = [
     path: '/borrowing/create',
     name: 'CreateBorrowing',
     component: CreateBorrowing
+  },
+  {
+    path: '/borrowings/pay',
+    name: 'PayBorrowings',
+    component: PayBorrowings
   }
 ]
 

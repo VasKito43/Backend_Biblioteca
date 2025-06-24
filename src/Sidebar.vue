@@ -20,6 +20,7 @@
           <li><button @click="$router.push('/users')" class="nav-btn">Users</button></li>
           <li><button @click="$router.push('/borrowing')" class="nav-btn">Borrowing</button></li>
           <li><button @click="$router.push('/borrowing/create')" class="nav-btn">Novo Empréstimo</button></li>
+          <li><button @click="$router.push('/borrowings/pay')" class="nav-btn">Pagar Empréstimos</button></li>
         </ul>
       </nav>
     </aside>
@@ -35,7 +36,9 @@ export default {
   },
   created() {
     const saved = localStorage.getItem('darkMode')
-    this.darkMode = saved !== null ? saved === 'true' : window.matchMedia('(prefers-color-scheme: dark)').matches
+    this.darkMode = saved !== null
+      ? saved === 'true'
+      : window.matchMedia('(prefers-color-scheme: dark)').matches
   },
   methods: {
     toggleDarkMode() {
@@ -47,7 +50,6 @@ export default {
 </script>
 
 <style scoped>
-/* Container e dark mode */
 .app-container {
   display: flex;
   min-height: 100vh;
@@ -56,8 +58,6 @@ export default {
   background-color: #111827;
   color: #f9fafb;
 }
-
-/* Sidebar */
 .sidebar {
   width: 260px;
   background-color: #ffffff;
@@ -72,8 +72,6 @@ export default {
   color: #f9fafb;
   border-color: #374151;
 }
-
-/* Header */
 .sidebar-header {
   display: flex;
   justify-content: space-between;
@@ -99,8 +97,6 @@ export default {
 .moon {
   color: #4b5563;
 }
-
-/* Navegação */
 .sidebar-nav ul {
   list-style: none;
   padding: 0;
