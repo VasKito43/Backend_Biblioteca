@@ -1,4 +1,5 @@
 const db = require('../config/database');
+const md5 = require('md5');
 
 /**
  * Lista todos os bibliotecários em 'librarian'.
@@ -30,6 +31,7 @@ exports.cadastrarLibrarian = async (
   password,
   linkImg
 ) => {
+  const hash = md5(password);
   const { rows } = await db.query(
     `INSERT INTO librarian 
        (name, date_birth, email, phone, password, link_img)
@@ -42,7 +44,7 @@ exports.cadastrarLibrarian = async (
        phone, 
        password, 
        link_img AS linkImg`,
-    [name, dateBirth, email, phone, password, linkImg]
+    [name, dateBirth, email, phone, hash, linkImg]
   );
   return rows[0];
 };
@@ -59,6 +61,7 @@ exports.alterarLibrarian = async (
   password,
   linkImg
 ) => {
+  const hash = md5(password);
   const { rows } = await db.query(
     `UPDATE librarian 
      SET 
@@ -77,7 +80,7 @@ exports.alterarLibrarian = async (
        phone, 
        password, 
        link_img AS linkImg`,
-    [name, dateBirth, email, phone, password, linkImg, id_librarian]
+    [name, dateBirth, email, phone, hash, linkImg, id_librarian]
   );
   if (rows.length === 0) throw new Error('Librarian não encontrado para alterar');
   return rows[0];
@@ -93,4 +96,18 @@ exports.removerLibrarian = async (id_librarian) => {
   );
   if (rowCount === 0) throw new Error('Librarian não encontrado para remover');
   return true;
+};
+
+
+/**
+ * Autentica registro e senha do bibliotecário.
+ * Retorna true se válido, false caso contrário.
+ */
+exports.authenticateLibrarian = async (register, password) => {
+  const hash = md5(password);
+  const { rows } = await db.query(
+    'SELECT register FROM librarian WHERE register = $1 AND password = $2',
+    [register, password]
+  );
+  return rows.length === 1;
 };

@@ -18,44 +18,74 @@ const routes = [
   {
     path: '/books',
     name: 'BooksPage',
-    component: BooksPage
+    component: BooksPage,
+    meta: { requiresAuth: true }
   },
   {
     path: '/books/register',
     name: 'RegisterBooks',
-    component: RegisterBooks
+    component: RegisterBooks,
+    meta: { requiresAuth: true }
   },
   {
     path: '/books/:isbn',
     name: 'UpdateBooks',
     component: UpdateBooks,
-    props: true
+    props: true,
+    meta: { requiresAuth: true }
   },
   {
     path: '/users',
     name: 'UsersPage',
-    component: UsersPage
+    component: UsersPage,
+    meta: { requiresAuth: true }
   },
   {
     path: '/borrowing',
     name: 'BorrowingPage',
-    component: BorrowingPage
+    component: BorrowingPage,
+    meta: { requiresAuth: true }
   },
   {
     path: '/borrowing/create',
     name: 'CreateBorrowing',
-    component: CreateBorrowing
+    component: CreateBorrowing,
+    meta: { requiresAuth: true }
   },
   {
     path: '/borrowings/pay',
     name: 'PayBorrowings',
-    component: PayBorrowings
+    component: PayBorrowings,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/update/:isbn',
+    name: 'UpdateBooks',
+    component: UpdateBooks,
+    props: true,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/register',
+    name: 'RegisterBooks',
+    component: RegisterBooks,
+    meta: { requiresAuth: true }
   }
 ]
 
 const router = createRouter({
   history: createWebHistory(),
   routes
+})
+
+router.beforeEach((to, from, next) => {
+  const isAuth = localStorage.getItem('isAuthenticated') === 'true'
+  console.log(isAuth)
+  if (to.meta.requiresAuth && !isAuth) {
+    return next({ name: 'Login' })
+  }
+  
+  next()
 })
 
 export default router

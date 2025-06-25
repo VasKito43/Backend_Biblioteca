@@ -10,6 +10,7 @@ const testeController = require('./controller/teste.controller');
 const bookController = require('./controller/books.controller');
 const userController = require('./controller/users.controller');
 const borrowingController = require('./controller/borrowings.controller');
+const librarianController = require('./controller/librarian.controller')
 const db = require('./config/database'); // Pra consultas diretas
 
 
@@ -52,6 +53,23 @@ app.use(bodyParser.json());
 app.use(fileupload());
 
 
+
+app.post('/api/librarians/login', async (req, res) => {
+  try {
+    const { register, password } = req.body
+    console.log(register, password)
+    const auth = await librarianController.authenticateLibrarian(register, password)
+    if (!auth) {
+      return res.status(401).json({ message: 'Registro ou senha inválidos' })
+    }
+    // opcional: gerar token JWT aqui e retornar
+    return res.json({ message: 'Login bem-sucedido' })
+  } catch (err) {
+    console.error('Erro no login de bibliotecário:', err)
+    return res.status(500).json({ message: 'Erro interno no servidor' })
+  }
+})
+
 // =============================
 // ROTAS DE API JSON DE BOOKS
 // =============================
@@ -75,7 +93,7 @@ app.get('/api/books/:isbn', async (req, res) => {
     res.json(book);
   } catch (erro) {
     console.error('Erro na API GET /api/books/:isbn:', erro);
-    res.status(404).json({ error: 'Livro não encontrado.' });
+    res.status(404).json({ error: erro.message });
   }
 });
 
@@ -106,15 +124,11 @@ app.put('/api/books/:isbn', async (req, res) => {
   try {
     const { isbn } = req.params;
     const {
-      title,
-      realeaseDate,
-      registerDate,
-      quantityAvailable,
-      edition,
-      linkImg
+      quantityAvailable
+
     } = req.body;
     const updated = await bookController.alterarBook(
-      isbn, title, realeaseDate, registerDate, quantityAvailable, edition, linkImg
+      isbn, quantityAvailable
     );
     res.json(updated);
   } catch (erro) {

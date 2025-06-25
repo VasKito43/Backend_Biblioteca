@@ -14,33 +14,10 @@
     <div class="register-container">
       <h2>Atualizar / Excluir Livro</h2>
       <form @submit.prevent="updateBook" class="register-form">
-        <div class="form-group">
-          <label for="isbn">ISBN</label>
-          <input id="isbn" v-model="form.isbn" type="text" disabled />
-        </div>
-        <div class="form-group">
-          <label for="title">Título</label>
-          <input id="title" v-model="form.title" type="text" required />
-        </div>
-        <div class="form-group">
-          <label for="realeaseDate">Data de Lançamento</label>
-          <input id="realeaseDate" v-model="form.realeaseDate" type="date" required />
-        </div>
-        <div class="form-group">
-          <label for="registerDate">Data de Registro</label>
-          <input id="registerDate" v-model="form.registerDate" type="date" required />
-        </div>
+        
         <div class="form-group">
           <label for="quantityAvailable">Quantidade Disponível</label>
           <input id="quantityAvailable" v-model.number="form.quantityAvailable" type="number" min="0" required />
-        </div>
-        <div class="form-group">
-          <label for="edition">Edição</label>
-          <input id="edition" v-model="form.edition" type="text" />
-        </div>
-        <div class="form-group">
-          <label for="linkImg">URL da Capa</label>
-          <input id="linkImg" v-model="form.linkImg" type="url" />
         </div>
 
         <div class="actions">
@@ -64,12 +41,7 @@ export default {
     return {
       form: {
         isbn: '',
-        title: '',
-        realeaseDate: '',
-        registerDate: '',
-        quantityAvailable: 1,
-        edition: '',
-        linkImg: ''
+        quantityAvailable: 0, // Inicializado como 0
       },
       message: '',
       success: false
@@ -91,15 +63,11 @@ export default {
           book = all.find(b => b.isbn === this.isbn);
         }
         if (!book) throw new Error('Livro não encontrado.');
+        
         this.form = {
           isbn: book.isbn || '',
-          title: book.title || '',
-          // usa slice apenas se string definida
-          realeaseDate: book.realeaseDate ? book.realeaseDate.slice(0, 10) : '',
-          registerDate: book.registerDate ? book.registerDate.slice(0, 10) : '',
-          quantityAvailable: book.quantityAvailable ?? 1,
-          edition: book.edition || '',
-          linkImg: book.linkImg || ''
+          quantityAvailable: Number(book.quantityavailable) || 0,
+
         };
       } catch (err) {
         console.error(err);
@@ -107,6 +75,7 @@ export default {
         this.success = false;
       }
     },
+    
     async updateBook() {
       try {
         const { isbn, ...payload } = this.form;
@@ -117,7 +86,7 @@ export default {
         });
         if (!res.ok) throw new Error('Falha ao atualizar livro.');
         const updated = await res.json();
-        this.message = `Livro "${updated.title}" atualizado com sucesso!`;
+        this.message = `Livro atualizado com sucesso!`;
         this.success = true;
       } catch (err) {
         console.error(err);

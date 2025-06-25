@@ -21,6 +21,7 @@
           <li><button @click="$router.push('/borrowing')" class="nav-btn">Borrowing</button></li>
           <li><button @click="$router.push('/borrowing/create')" class="nav-btn">Novo Empréstimo</button></li>
           <li><button @click="$router.push('/borrowings/pay')" class="nav-btn">Pagar Empréstimos</button></li>
+          <li class="logout-item"><button @click="logout" class="nav-btn">Sair</button></li>
         </ul>
       </nav>
     </aside>
@@ -44,6 +45,10 @@ export default {
     toggleDarkMode() {
       this.darkMode = !this.darkMode
       localStorage.setItem('darkMode', this.darkMode)
+    },
+    logout() {
+      localStorage.removeItem('isAuthenticated')
+      this.$router.push('/')
     }
   }
 }
@@ -58,6 +63,7 @@ export default {
   background-color: #111827;
   color: #f9fafb;
 }
+
 .sidebar {
   width: 260px;
   background-color: #ffffff;
@@ -72,6 +78,7 @@ export default {
   color: #f9fafb;
   border-color: #374151;
 }
+
 .sidebar-header {
   display: flex;
   justify-content: space-between;
@@ -97,10 +104,14 @@ export default {
 .moon {
   color: #4b5563;
 }
+
 .sidebar-nav ul {
   list-style: none;
   padding: 0;
   margin: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 .nav-btn {
   width: 100%;
@@ -119,5 +130,10 @@ export default {
 }
 .dark-mode .nav-btn:hover {
   background-color: #374151;
+}
+
+/* Push logout button to bottom */
+.logout-item {
+  margin-top: 60vh;
 }
 </style>

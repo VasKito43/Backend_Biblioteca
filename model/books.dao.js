@@ -71,38 +71,31 @@ exports.criarBook = async (
 /**
  * Altera um livro existente pelo ISBN.
  */
-exports.alterarBook = async (
-  isbn,
-  title,
-  realeaseDate,
-  registerDate,
-  quantityAvailable,
-  edition,
-  linkImg
-) => {
-  const { rows } = await db.query(
-    `UPDATE books 
-     SET 
-       title = $1, 
-       realease_date = $2, 
-       register_date = $3, 
-       quantity_available = $4, 
-       edition = $5, 
-       link_img = $6 
-     WHERE isbn = $7 
-     RETURNING 
-       isbn, 
-       title, 
-       realease_date AS realeaseDate, 
-       register_date AS registerDate, 
-       quantity_available AS quantityAvailable, 
-       edition, 
-       link_img AS linkImg`,
-    [title, realeaseDate, registerDate, quantityAvailable, edition, linkImg, isbn]
-  );
-  if (rows.length === 0) throw new Error("Book não encontrado para alterar");
-  return rows[0];
-};
+ exports.alterarBook = async (
+   isbn,
+   quantityAvailable
+ ) => {
+   const { rows } = await db.query(
+-    `UPDATE books 
+-     SET 
+-       quantity_available = $2, 
+-
+-     WHERE isbn = $1 
+-     RETURNING 
+-       isbn, 
+-       quantity_available AS quantityAvailable,`,
+-    [quantityAvailable, isbn]
++    `UPDATE books
++     SET quantity_available = $2
++     WHERE isbn = $1
++     RETURNING
++       isbn,
++       quantity_available AS quantityAvailable`,
++    [isbn, quantityAvailable]
+   );
+   if (rows.length === 0) throw new Error("Book não encontrado para alterar");
+   return rows[0];
+ };
 
 /**
  * Remove (deleta) um livro pelo ISBN.

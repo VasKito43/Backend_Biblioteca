@@ -13,13 +13,14 @@
         </div>
         <form @submit.prevent="handleSubmit" class="login-form">
           <div class="form-group">
-            <label for="username">Usuário</label>
+            <label for="register">Registro</label>
             <input
-              id="username"
+              id="register"
               type="text"
-              v-model="username"
-              placeholder="Ex: Thiago"
+              v-model="register"
+              placeholder="Ex: 1234"
               class="input-field"
+              required
             />
           </div>
           <div class="form-group">
@@ -30,10 +31,11 @@
               v-model="password"
               placeholder="Ex: 1q2w3e4r"
               class="input-field"
+              required
             />
           </div>
           <button type="submit" class="submit-button">
-            Cadastrar
+            Entrar
           </button>
         </form>
         <div class="links">
@@ -55,14 +57,34 @@ export default {
   },
   data() {
     return {
-      username: '',
-      password: ''
+      register: '',
+      password: '',
+      error: ''
     }
   },
   methods: {
-    handleSubmit() {
-      console.log('Usuário:', this.username, 'Senha:', this.password)
-      this.$router.push('/books')
+    async handleSubmit() {
+      this.error = ''
+      try {
+        const res = await fetch('/api/librarians/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            register: this.register,
+            password: this.password
+          })
+        })
+        if (!res.ok) {
+          const { message } = await res.json().catch(() => ({}))
+          throw new Error(message || 'Registro ou senha inválidos')
+        }
+        // marca login bem-sucedido
+        localStorage.setItem('isAuthenticated', 'true')
+        // redireciona para página principal
+        this.$router.push('/books')
+      } catch (err) {
+        this.error = err.message
+      }
     }
   }
 }
@@ -170,5 +192,11 @@ export default {
 
 .links a:hover {
   text-decoration: underline;
+}
+
+.error {
+  color: #c53030;
+  margin-top: 0.75rem;
+  text-align: center;
 }
 </style>
