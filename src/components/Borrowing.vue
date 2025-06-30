@@ -1,7 +1,9 @@
 <template>
   <div class="container">
     <!-- Sidebar reutilizável -->
-    <Sidebar />
+    <div class="sidebar">
+      <Sidebar />
+    </div>
 
     <!-- Conteúdo Principal -->
     <main class="main-content">
@@ -92,6 +94,18 @@ export default {
 </script>
 
 <style scoped>
+.dark-mode .loans-table tbody tr:hover {
+  background-color: #374151;
+}
+
+.sidebar {
+  width: 240px;
+  background: #ffffff;
+  border-right: 1px solid #ddd;
+  padding: 20px;
+  flex-shrink: 0;
+}
+
 /* Layout geral */
 .container {
   display: flex;
@@ -171,7 +185,7 @@ export default {
   border-bottom: 2px solid #cbd5e1;
 }
 .loans-table tbody tr:hover {
-  background-color: #f9fafb;
+  background-color: #f0f0f0;
 }
 
 /* Badge de usuário */
@@ -190,5 +204,13 @@ export default {
   height: 1.5rem;
   border-radius: 9999px;
   object-fit: cover;
+}
+
+.dark-mode .button {
+  background-color: #4b5563;
+  color: #f9fafb;
+}
+.dark-mode .button:hover {
+  background-color: #374151;
 }
 </style>

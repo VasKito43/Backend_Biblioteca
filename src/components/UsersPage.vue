@@ -1,9 +1,9 @@
 <template>
   <div class="container">
-    <aside class="sidebar">
-      <Sidebar />
-    </aside>
 
+   <div class="sidebar">
+      <Sidebar />
+    </div>
     <main class="main-content">
       <header class="header-search">
         <h1>Usuários</h1>

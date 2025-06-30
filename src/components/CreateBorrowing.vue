@@ -307,4 +307,61 @@ h1 {
 .option-item.blocked {
   color: red;
 }
+
+/* Modo Escuro */
+.dark-mode .main-content {
+  background-color: #1f2937;
+  color: #f9fafb;
+}
+
+.dark-mode .form {
+  background-color: #374151;
+  color: #f9fafb;
+}
+
+.dark-mode .input-field {
+  background-color: #4b5563;
+  color: #f9fafb;
+  border-color: #6b7280;
+}
+
+.dark-mode .input-field::placeholder {
+  color: #d1d5db;
+}
+
+.dark-mode .options {
+  background-color: #4b5563;
+  border-color: #6b7280;
+}
+
+.dark-mode .option-item {
+  background-color: #4b5563;
+  color: #f9fafb;
+  border-bottom: 1px solid #6b7280;
+}
+
+.dark-mode .option-item:hover {
+  background-color: #374151;
+}
+
+.dark-mode .option-item small {
+  color: #d1d5db;
+}
+
+.dark-mode .book-item img {
+  border-color: #6b7280;
+}
+
+.dark-mode .submit-btn {
+  background-color: #2563eb;
+}
+
+.dark-mode .submit-btn:hover {
+  background-color: #1d4ed8;
+}
+
+.dark-mode .option-item.blocked {
+  color: #f87171;
+}
+
 </style>

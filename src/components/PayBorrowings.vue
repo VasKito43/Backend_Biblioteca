@@ -107,4 +107,36 @@ h1 { margin-bottom: 1.5rem; }
 .button-pay { padding: 0.5rem 1rem; background: #48bb78; color: #fff; border: none; border-radius: 0.375rem; cursor: pointer; }
 .button-pay:hover { background: #38a169; }
 .paid-label { color: #4a5568; font-weight: 600; }
+/* 🌙 Modo escuro */
+.dark-mode .main-content {
+  background-color: #1f2937;
+  color: #f9fafb;
+}
+
+.dark-mode .payments-table thead th {
+  background-color: #374151;
+  color: #f9fafb;
+}
+
+.dark-mode .payments-table td {
+  border-color: #4b5563;
+}
+
+.dark-mode .payments-table tbody tr:hover {
+  background-color: #374151;
+}
+
+.dark-mode .button-pay {
+  background-color: #38a169;
+  color: #fff;
+}
+
+.dark-mode .button-pay:hover {
+  background-color: #2f855a;
+}
+
+.dark-mode .paid-label {
+  color: #a0aec0;
+}
+
 </style>

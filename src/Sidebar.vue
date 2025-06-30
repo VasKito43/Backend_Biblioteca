@@ -36,15 +36,28 @@ export default {
     return { darkMode: false }
   },
   created() {
-    const saved = localStorage.getItem('darkMode')
-    this.darkMode = saved !== null
-      ? saved === 'true'
-      : window.matchMedia('(prefers-color-scheme: dark)').matches
-  },
+  const saved = localStorage.getItem('darkMode');
+  this.darkMode = saved !== null
+    ? saved === 'true'
+    : window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+  // Sincroniza a classe body na criação
+  if (this.darkMode) {
+    document.body.classList.add('dark-mode');
+  } else {
+    document.body.classList.remove('dark-mode');
+  }
+},
   methods: {
     toggleDarkMode() {
       this.darkMode = !this.darkMode
       localStorage.setItem('darkMode', this.darkMode)
+
+      if (this.darkMode) {
+        document.body.classList.add('dark-mode')
+      } else {
+        document.body.classList.remove('dark-mode')
+      }
     },
     logout() {
       localStorage.removeItem('isAuthenticated')
@@ -57,7 +70,6 @@ export default {
 <style scoped>
 .app-container {
   display: flex;
-  min-height: 100vh;
 }
 .dark-mode {
   background-color: #111827;
@@ -65,7 +77,11 @@ export default {
 }
 
 .sidebar {
+  position: fixed;   /* <-- faz a mágica de ficar fixa */
+  top: 0;
+  left: 0;
   width: 260px;
+  height: 100vh;     /* ocupa toda a altura da viewport */
   background-color: #ffffff;
   color: #1f2937;
   border-right: 1px solid #e5e7eb;
@@ -104,15 +120,21 @@ export default {
 .moon {
   color: #4b5563;
 }
+.sidebar-nav {
+  flex: 1; /* faz o nav ocupar todo espaço vertical da sidebar */
+  display: flex;
+  flex-direction: column;
+}
 
 .sidebar-nav ul {
   list-style: none;
   padding: 0;
   margin: 0;
+  flex-grow: 1;
   display: flex;
   flex-direction: column;
-  height: 100%;
 }
+
 .nav-btn {
   width: 100%;
   background: none;
@@ -132,8 +154,15 @@ export default {
   background-color: #374151;
 }
 
-/* Push logout button to bottom */
 .logout-item {
-  margin-top: 60vh;
+  margin-top: auto; /* empurra pra baixo */
+}
+.main-content {
+  margin-left: 260px;  /* <-- empurra o conteúdo pro lado da sidebar */
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  min-height: 100vh;
 }
 </style>
+<!-- o botão de sair da sidebar está sumindo dela, tem como deixalo um pouco mais acima -->

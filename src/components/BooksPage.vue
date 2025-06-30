@@ -175,6 +175,7 @@ export default {
 }
 .filter-button {
   background-color: #e2e8f0;
+  color: #2d3748;
 }
 .search-button {
   background-color: #3b82f6;
