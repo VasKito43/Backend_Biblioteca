@@ -100,7 +100,7 @@ export default {
 /* Área de imagem */
 .image-area {
   flex: 1;
-  background-color: #ffffff;
+  background-color: lightblue;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -109,7 +109,7 @@ export default {
 /* Área do formulário */
 .form-area {
   flex: 1;
-  background-color: #f3f4f6;
+  background-color: #496090;
   display: flex;
   align-items: center;
   justify-content: center;
