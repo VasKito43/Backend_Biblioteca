@@ -1,216 +1,266 @@
 <template>
   <div class="container">
-    <!-- Sidebar reutilizável -->
-    <div class="sidebar">
-      <Sidebar />
-    </div>
-
-    <!-- Conteúdo Principal -->
+    <Sidebar />
     <main class="main-content">
-      <!-- Cabeçalho e barra de busca -->
-      <div class="header-search">
-        <h1>Empréstimos</h1>
-        <div class="search-controls">
-          <input
-            type="text"
-            placeholder="Nome do Livro"
-            v-model="searchBook"
-            class="input-field"
-          />
-          <button @click="handleFilter" class="button">
-            Filtrar
-          </button>
-        </div>
+      <h1>Empréstimos</h1>
+
+
+      <!-- Filtros -->
+      <div class="filters">
+        <select v-model="filters.status" class="input-field">
+          <option value="">Todos status</option>
+          <option v-for="s in statusOptions" :key="s.id" :value="s.name">
+            {{ s.name }}
+          </option>
+        </select>
+        <input v-model="filters.search" placeholder="Livro ou ISBN" class="input-field" />
+        <input type="date" v-model="filters.date" class="input-field" />
+        <button @click="applyFilters" class="button">Filtrar</button>
       </div>
 
-      <!-- Tabela de Empréstimos -->
+
+      <!-- Tabela de empréstimos -->
       <div class="table-wrapper">
         <table class="loans-table">
           <thead>
             <tr>
-              <th>Data</th>
-              <th>Nome Livro</th>
+              <th>Data Empréstimo</th>
+              <th>Data Devolução</th>
               <th>Usuário</th>
-              <th>Dias</th>
-              <th>Débitos</th>
-              <th></th>
+              <th>Bibliotecário</th>
+              <th>ISBN</th>
+              <th>Livro</th>
+              <th>Status</th>
+              <th>Ações</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(loan, index) in filteredLoans" :key="index">
-              <td>{{ loan.date }}</td>
-              <td>{{ loan.book }}</td>
-              <td><span class="badge">{{ loan.user }}</span></td>
-              <td>{{ loan.days }}</td>
-              <td>{{ loan.debit }}</td>
+            <tr
+              v-for="loan in filteredLoans"
+              :key="loan.id"
+              :class="{
+                'returned-row': loan.status === 'pago',
+                'late-row': loan.status === 'atrasado' || loan.status === 'atrasado'
+              }"
+            >
+              <td>{{ formatDate(loan.dateBorrowing) }}</td>
+              <td>{{ formatDate(loan.expectedReturn) }}</td>
+              <td>{{ loan.userName }}</td>
+              <td>{{ loan.librarianName }}</td>
+              <td>{{ loan.bookIsbn }}</td>
+              <td>{{ loan.bookTitle }}</td>
+              <td>{{ loan.status }}</td>
               <td>
-                <img
-                  v-if="loan.avatar"
-                  :src="loan.avatar"
-                  alt="Avatar"
-                  class="avatar"
-                />
+                <template v-if="loan.status !== 'pago'">
+                  <button
+                    @click="openReturnDialog(loan)"
+                    :class="['button action-button', { 'disabled-button': loan.status === 'pago' }]"
+                    :disabled="loan.status === 'pago'"
+                  >
+                    {{ loan.isLate ? 'Pagar e Devolver' : 'Devolver' }}
+                  </button>
+                </template>
+                <template v-else>
+                  <button class="button disabled-button" disabled>Devolvido</button>
+                </template>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
+
+
+      <!-- Modal de devolução -->
+      <div v-if="showDialog" class="modal">
+        <div class="modal-content">
+          <h2>Devolver Livro</h2>
+          <p>Usuário: {{ dialog.loan.userName }}</p>
+          <p>Livro: {{ dialog.loan.bookTitle }}</p>
+          <p>Multa: R$ {{ dialog.fine }}</p>
+          <button @click="confirmReturn" class="button action-button">Confirmar</button>
+          <button @click="closeDialog" class="button cancel-button">Cancelar</button>
+        </div>
+      </div>
     </main>
   </div>
 </template>
 
+
 <script>
 import Sidebar from '../Sidebar.vue'
-
 export default {
   name: 'BorrowingPage',
   components: { Sidebar },
   data() {
     return {
-      searchBook: '',
-      loans: [
-        { date: '01/02/24', book: 'Task 1', user: 'Roberto', days: '6 days', debit: '0', avatar: '/avatars/rob.png' },
-        { date: '02/02/24', book: 'Task 2', user: 'Vasco', days: '4 days', debit: '0', avatar: '/avatars/vasco.png' },
-        { date: '03/02/24', book: 'Write blog post for demo day', user: 'Bruno', days: '14 days', debit: '0', avatar: '/avatars/bruno.png' },
-        // ... demais registros
-      ]
+      loans: [],
+      statusOptions: [
+        { id: 1, name: 'pendente' },
+        { id: 2, name: 'pago' },
+        { id: 3, name: 'atrasado' }
+      ],
+      filters: {
+        status: '',
+        search: '',
+        date: ''
+      },
+      showDialog: false,
+      dialog: { loan: null, fine: 0 }
     }
   },
   computed: {
     filteredLoans() {
-      if (!this.searchBook) return this.loans
-      return this.loans.filter(loan =>
-        loan.book.toLowerCase().includes(this.searchBook.toLowerCase())
-      )
+    return this.loans.filter(loan => {
+      // 1) Status
+      const matchStatus = this.filters.status
+        ? loan.status === this.filters.status
+        : true;
+
+
+      // 2) Busca de texto
+      const term = this.filters.search.toLowerCase();
+      const matchSearch = term
+        ? loan.bookTitle.toLowerCase().includes(term) ||
+          loan.bookIsbn.includes(term)
+        : true;
+
+
+      // 3) Filtro de data (selecionada OU dia anterior)
+      let matchDate = true;
+      if (this.filters.date) {
+        // parse YYYY‑MM‑DD do filtro
+        const [sy, sm, sd] = this.filters.date.split('-').map(Number);
+        const sel = new Date(sy, sm - 1, sd);
+        const prev = new Date(sy, sm - 1, sd + 1);
+
+
+        // parse YYYY‑MM‑DD do empréstimo
+        const [ly, lm, ld] = loan.dateBorrowing.split('-').map(Number);
+        const loanDate = new Date(ly, lm - 1, ld);
+
+
+
+
+        matchDate =
+          loanDate.getTime() === sel.getTime() ||
+          loanDate.getTime() === prev.getTime();
+      }
+
+
+      return matchStatus && matchSearch && matchDate;
+    });
+  }
+},
+  methods: {
+    async fetchLoans() {
+  try {
+    const res  = await fetch('/api/borrowings');
+    const data = await res.json();
+    this.loans = data.map(b => {
+      // datas retornadas pelo banco
+      const rawDate       = b.dateborrowing;
+      // transforma em Date e soma 1 dia
+      const loanDate = rawDate
+        ? new Date(new Date(rawDate).getTime() + 24*60*60*1000)
+        : null;
+      const dateBorrowing = loanDate
+        ? loanDate.toISOString().slice(0,10)
+        : '';
+
+
+
+
+      const rawExpected   = b.expected_return;
+      const expectedReturn= rawExpected ? rawExpected.slice(0,10) : '';
+
+
+      // determina status dinâmico
+      let status = b.status;
+      if (status === 'pendente' && expectedReturn) {
+        const today = new Date().setHours(0,0,0,0);
+        const due   = new Date(expectedReturn).setHours(0,0,0,0);
+        if (today > due) status = 'atrasado';
+      }
+
+
+      return {
+        id:             b.id_borrowing,
+        userName:       b.user_name,
+        librarianName:  b.librarian_name,
+        bookIsbn:       b.book_isbn,
+        bookTitle:      b.book_title,
+        dateBorrowing,          // agora já incrementado
+        expectedReturn,
+        status,
+        isLate: status === 'atrasado'
+      };
+    });
+  } catch (err) {
+    console.error('Erro ao carregar empréstimos:', err);
+  }
+},
+    applyFilters() {},
+    formatDate(d) {
+      return new Date(d).toLocaleDateString('pt-BR');
+    },
+    openReturnDialog(loan) {
+      const today = new Date();
+      const expected = new Date(loan.expectedReturn);
+      const diff = Math.ceil((today - expected) / (1000 * 60 * 60 * 24));
+      this.dialog.loan = loan;
+      this.dialog.fine = loan.isLate ? diff : 0;
+      this.showDialog = true;
+    },
+    closeDialog() {
+      this.showDialog = false;
+    },
+    async confirmReturn() {
+      await fetch(
+        `/api/borrowings/${this.dialog.loan.id}/return`,
+        {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fine: this.dialog.fine })
+        }
+      );
+      this.showDialog = false;
+      this.fetchLoans();
     }
   },
-  methods: {
-    handleFilter() {
-      console.log('Filtrando livros por nome:', this.searchBook)
-      // lógica de filtragem adicional
-    }
+  created() {
+    this.fetchLoans();
   }
 }
 </script>
 
+
 <style scoped>
-.dark-mode .loans-table tbody tr:hover {
-  background-color: #374151;
-}
-
-.sidebar {
-  width: 240px;
-  background: #ffffff;
-  border-right: 1px solid #ddd;
-  padding: 20px;
-  flex-shrink: 0;
-}
-
-/* Layout geral */
-.container {
-  display: flex;
-  min-height: 100vh;
-}
-.main-content {
-  flex: 1;
-  padding: 1.5rem;
-  background-color: #ffffff;
-  color: #2d3748;
-}
-
-/* Cabeçalho e busca */
-.header-search {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 1rem;
-}
-@media (min-width: 640px) {
-  .header-search {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-  }
-}
-.header-search h1 {
-  font-size: 1.5rem;
+.container { display: flex; min-height: 100vh; margin-left: 15vw;}
+.main-content { flex: 1; padding: 2rem; background: #fff; }
+.filters { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+.input-field { padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.25rem; }
+.button { padding: 0.5rem 1rem; border: none; border-radius: 0.25rem; cursor: pointer; }
+.table-wrapper { overflow-x: auto; }
+.loans-table { width: 100%; border-collapse: collapse; }
+.loans-table th, .loans-table td { padding: 0.75rem; border-bottom: 1px solid #e2e8f0; text-align: left; }
+.filters select { background: #fff; }
+.modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; }
+.modal-content { background: #fff; padding: 2rem; border-radius: 0.5rem; }
+.action-button { background: #48bb78; color: #fff; }
+.disabled-button { background: #cbd5e1; color: #6b7280; cursor: not-allowed; }
+.returned-row {
+  background-color: #f0fff4;  /* fundo verde claro */
+  color: #2f855a;             /* texto verde escuro */
   font-weight: bold;
-  margin-bottom: 0.5rem;
-}
-@media (min-width: 640px) {
-  .header-search h1 {
-    margin-bottom: 0;
-  }
-}
-.search-controls {
-  display: flex;
-  gap: 0.5rem;
-}
-.input-field {
-  padding: 0.5rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.25rem;
-  width: 12rem;
-  outline: none;
-}
-.input-field:focus {
-  border-color: #60a5fa;
-  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.5);
-}
-.button {
-  padding: 0.5rem 1rem;
-  border: 1px solid transparent;
-  border-radius: 0.25rem;
-  background-color: #f3f4f6;
-  cursor: pointer;
-}
-.button:hover {
-  background-color: #e5e7eb;
 }
 
-/* Tabela */
-.table-wrapper {
-  overflow-x: auto;
-}
-.loans-table {
-  width: 100%;
-  border-collapse: collapse;
-  text-align: left;
-}
-.loans-table th,
-.loans-table td {
-  padding: 0.75rem;
-  border-bottom: 1px solid #e2e8f0;
-}
-.loans-table thead tr {
-  border-bottom: 2px solid #cbd5e1;
-}
-.loans-table tbody tr:hover {
-  background-color: #f0f0f0;
-}
 
-/* Badge de usuário */
-.badge {
-  display: inline-block;
-  padding: 0.25rem 0.5rem;
-  background-color: #ebf8ff;
-  color: #2b6cb0;
-  border-radius: 9999px;
-  font-size: 0.875rem;
-}
-
-/* Avatar */
-.avatar {
-  width: 1.5rem;
-  height: 1.5rem;
-  border-radius: 9999px;
-  object-fit: cover;
-}
-
-.dark-mode .button {
-  background-color: #4b5563;
-  color: #f9fafb;
-}
-.dark-mode .button:hover {
-  background-color: #374151;
+.late-row {
+  background-color: #fff5f5;  /* fundo vermelho claro */
+  color: #c53030;             /* texto vermelho escuro */
+  font-weight: bold;
 }
 </style>
+
+
+

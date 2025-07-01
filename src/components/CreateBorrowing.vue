@@ -149,7 +149,7 @@ export default {
       return `https://covers.openlibrary.org/b/isbn/${isbn}-S.jpg`;
     },
     async submitForm() {
-    if (this.form.userStatsId !== 2) {
+    if (this.form.userStatsId !== 1) {
        alert('Usuário não pode realizar empréstimo: pendências existentes.');
        return;
      }

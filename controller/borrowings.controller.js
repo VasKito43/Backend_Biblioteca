@@ -1,4 +1,6 @@
 const db = require('../config/database');
+const usersController = require('./users.controller');
+
 
 /**
  * Lista todos os empréstimos em 'borrowings'.
@@ -94,3 +96,81 @@ exports.removerBorrowing = async (id_borrowing) => {
   if (rowCount === 0) throw new Error('Borrowing não encontrado para remover');
   return true;
 };
+
+
+exports.listarBorrowingsComDetalhes = async () => {
+  const { rows } = await db.query(
+    `SELECT
+       b.id AS id_borrowing,
+       b.date_borrowing AS dateBorrowing,
+       (b.date_borrowing + INTERVAL '14 days')::date AS expected_return,
+       u.name  AS user_name,
+       l.name  AS librarian_name,
+       b.book_isbn AS book_isbn,
+       bk.title    AS book_title,
+       s.name      AS status,              -- usar “s.name” em vez de “su.name”
+       b.return_date
+     FROM borrowings b
+     JOIN users u ON b.user_register     = u.register
+     JOIN librarian l ON b.librarian_register = l.register
+     JOIN books bk ON b.book_isbn        = bk.isbn
+     JOIN stats s ON b.stats_id          = s.id
+     ORDER BY b.date_borrowing DESC`
+  );
+  return rows;
+};
+
+
+/**
+ * Registra a devolução e multa, atualiza livro e usuário.
+ */
+exports.devolverBorrowing = async (idBorrowing, fine) => {
+  try {
+    await db.query('BEGIN');
+
+
+    // 1) Busca empréstimo
+    const result = await db.query(
+      'SELECT user_register, book_isbn FROM borrowings WHERE id = $1 FOR UPDATE',
+      [idBorrowing]
+    );
+    if (result.rows.length === 0) throw new Error('Empréstimo não encontrado');
+    const { user_register, book_isbn } = result.rows[0];
+
+
+    // 2) Atualiza status do empréstimo
+    await db.query(
+      `UPDATE borrowings
+         SET return_date = CURRENT_DATE,
+             stats_id    = (SELECT id FROM stats WHERE name = 'pago')
+       WHERE id = $1`,
+      [idBorrowing]
+    );
+
+
+    // 3) Incrementa estoque do livro
+    await db.query(
+      'UPDATE books SET quantity_available = quantity_available + 1 WHERE isbn = $1',
+      [book_isbn]
+    );
+
+
+    // 4) Acumula multa no usuário, se houver
+    if (fine > 0) {
+      const usersController = require('./users.controller');
+      await usersController.adicionarDebts(user_register, fine);
+    }
+
+
+    await db.query('COMMIT');
+    return { id: idBorrowing, fine };
+  } catch (err) {
+    await db.query('ROLLBACK');
+    throw err;
+  }
+};
+
+
+
+
+

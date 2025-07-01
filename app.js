@@ -181,31 +181,15 @@ app.get('/api/users/:id', async (req, res) => {
 // ROTAS DE API JSON DE BORROWINGS
 // =============================
 
-// Listar empréstimos
-app.get('/api/borrowings', async (req, res) => {
-  try {
-    const loans = await borrowingController.listarBorrowings();
-    res.json(loans);
-  } catch (erro) {
-    console.error('Erro na API /api/borrowings:', erro);
-    res.status(500).json({ error: 'Erro ao buscar empréstimos.' });
-  }
-});
 
-// Cadastrar empréstimo
 app.post('/api/borrowings', async (req, res) => {
   try {
-    const {
-      user_register,
-      librarian_register,
-      book_isbn,
-      date_borrowing,
-      return_date
-    } = req.body;
+    const { user_register, librarian_register, book_isbn, date_borrowing, return_date } = req.body;
 
-    // 1) Verificar usuário ativo
+
+    // Verifica usuário ativo
     const userCheck = await db.query(
-      `SELECT su.name AS status 
+      `SELECT su.name AS status
          FROM users u
          JOIN stats_users su ON u.stats_user_id = su.id
         WHERE u.register = $1`,
@@ -215,10 +199,11 @@ app.post('/api/borrowings', async (req, res) => {
       return res.status(400).json({ error: 'Usuário não ativo ou não encontrado.' });
     }
 
-    // 2) Verificar livro disponível
+
+    // Verifica livro disponível
     const bookCheck = await db.query(
-      `SELECT quantity_available 
-         FROM books 
+      `SELECT quantity_available
+         FROM books
         WHERE isbn = $1`,
       [book_isbn]
     );
@@ -229,17 +214,19 @@ app.post('/api/borrowings', async (req, res) => {
       return res.status(400).json({ error: 'Livro sem cópias disponíveis.' });
     }
 
-    // 3) Cadastrar o empréstimo
+
+    // Cadastra empréstimo
     const created = await borrowingController.cadastrarBorrowing(
       user_register,
       librarian_register,
       book_isbn,
-      /* stats_id: */ 1,          // ou outro status padrão
+      /* stats_id */ 1,
       date_borrowing,
       return_date
     );
 
-    // 4) Decrementar estoque do livro
+
+    // Decrementa estoque
     await db.query(
       `UPDATE books
           SET quantity_available = quantity_available - 1
@@ -247,11 +234,39 @@ app.post('/api/borrowings', async (req, res) => {
       [book_isbn]
     );
 
+
     return res.status(201).json(created);
+
 
   } catch (err) {
     console.error('Erro ao criar empréstimo:', err);
     return res.status(500).json({ error: 'Erro ao criar empréstimo.' });
+  }
+});
+
+
+// 2) Listar empréstimos com detalhes (única rota GET /api/borrowings)
+app.get('/api/borrowings', async (req, res) => {
+  try {
+    const rows = await borrowingController.listarBorrowingsComDetalhes();
+    res.json(rows);
+  } catch (err) {
+    console.error('Erro ao listar empréstimos:', err);
+    res.status(500).json({ error: 'Erro ao buscar empréstimos.' });
+  }
+});
+
+
+// 3) Endpoint de devolução (pagar multa + devolver)
+app.put('/api/borrowings/:id/return', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    const { fine } = req.body;
+    const result = await borrowingController.devolverBorrowing(id, fine || 0);
+    res.json({ message: 'Devolução registrada', ...result });
+  } catch (err) {
+    console.error('Erro ao devolver empréstimo:', err);
+    res.status(500).json({ error: err.message });
   }
 });
 

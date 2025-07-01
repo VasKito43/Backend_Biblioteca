@@ -111,3 +111,11 @@ exports.removerUser = async (id_user) => {
   if (rowCount === 0) throw new Error('User não encontrado para remover');
   return true;
 };
+
+
+exports.adicionarDebts = async (userRegister, amount) => {
+  await db.query(
+    'UPDATE users SET debts = debts + $1 WHERE register = $2',
+    [amount, userRegister]
+  );
+};
