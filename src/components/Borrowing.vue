@@ -1,9 +1,8 @@
 <template>
   <div class="container">
-    <Sidebar />
+    <Sidebar class="sidebar"/>
     <main class="main-content">
       <h1>Empréstimos</h1>
-
 
       <!-- Filtros -->
       <div class="filters">
@@ -17,7 +16,6 @@
         <input type="date" v-model="filters.date" class="input-field" />
         <button @click="applyFilters" class="button">Filtrar</button>
       </div>
-
 
       <!-- Tabela de empréstimos -->
       <div class="table-wrapper">
@@ -40,7 +38,7 @@
               :key="loan.id"
               :class="{
                 'returned-row': loan.status === 'pago',
-                'late-row': loan.status === 'atrasado' || loan.status === 'atrasado'
+                'late-row': loan.status === 'atrasado'
               }"
             >
               <td>{{ formatDate(loan.dateBorrowing) }}</td>
@@ -54,8 +52,7 @@
                 <template v-if="loan.status !== 'pago'">
                   <button
                     @click="openReturnDialog(loan)"
-                    :class="['button action-button', { 'disabled-button': loan.status === 'pago' }]"
-                    :disabled="loan.status === 'pago'"
+                    class="button action-button"
                   >
                     {{ loan.isLate ? 'Pagar e Devolver' : 'Devolver' }}
                   </button>
@@ -68,7 +65,6 @@
           </tbody>
         </table>
       </div>
-
 
       <!-- Modal de devolução -->
       <div v-if="showDialog" class="modal">
@@ -84,7 +80,6 @@
     </main>
   </div>
 </template>
-
 
 <script>
 import Sidebar from '../Sidebar.vue'
@@ -110,157 +105,252 @@ export default {
   },
   computed: {
     filteredLoans() {
-    return this.loans.filter(loan => {
-      // 1) Status
-      const matchStatus = this.filters.status
-        ? loan.status === this.filters.status
-        : true;
+      return this.loans.filter(loan => {
+        const matchStatus = this.filters.status
+          ? loan.status === this.filters.status
+          : true
 
+        const term = this.filters.search.toLowerCase()
+        const matchSearch = term
+          ? loan.bookTitle.toLowerCase().includes(term) ||
+            loan.bookIsbn.includes(term)
+          : true
 
-      // 2) Busca de texto
-      const term = this.filters.search.toLowerCase();
-      const matchSearch = term
-        ? loan.bookTitle.toLowerCase().includes(term) ||
-          loan.bookIsbn.includes(term)
-        : true;
+        let matchDate = true
+        if (this.filters.date) {
+          const [sy, sm, sd] = this.filters.date.split('-').map(Number)
+          const sel = new Date(sy, sm - 1, sd)
+          const prev = new Date(sy, sm - 1, sd + 1)
 
+          const [ly, lm, ld] = loan.dateBorrowing.split('-').map(Number)
+          const loanDate = new Date(ly, lm - 1, ld)
 
-      // 3) Filtro de data (selecionada OU dia anterior)
-      let matchDate = true;
-      if (this.filters.date) {
-        // parse YYYY‑MM‑DD do filtro
-        const [sy, sm, sd] = this.filters.date.split('-').map(Number);
-        const sel = new Date(sy, sm - 1, sd);
-        const prev = new Date(sy, sm - 1, sd + 1);
+          matchDate =
+            loanDate.getTime() === sel.getTime() ||
+            loanDate.getTime() === prev.getTime()
+        }
 
-
-        // parse YYYY‑MM‑DD do empréstimo
-        const [ly, lm, ld] = loan.dateBorrowing.split('-').map(Number);
-        const loanDate = new Date(ly, lm - 1, ld);
-
-
-
-
-        matchDate =
-          loanDate.getTime() === sel.getTime() ||
-          loanDate.getTime() === prev.getTime();
-      }
-
-
-      return matchStatus && matchSearch && matchDate;
-    });
-  }
-},
+        return matchStatus && matchSearch && matchDate
+      })
+    }
+  },
   methods: {
     async fetchLoans() {
-  try {
-    const res  = await fetch('/api/borrowings');
-    const data = await res.json();
-    this.loans = data.map(b => {
-      // datas retornadas pelo banco
-      const rawDate       = b.dateborrowing;
-      // transforma em Date e soma 1 dia
-      const loanDate = rawDate
-        ? new Date(new Date(rawDate).getTime() + 24*60*60*1000)
-        : null;
-      const dateBorrowing = loanDate
-        ? loanDate.toISOString().slice(0,10)
-        : '';
+      try {
+        const res = await fetch('/api/borrowings')
+        const data = await res.json()
+        this.loans = data.map(b => {
+          const rawDate = b.dateborrowing
+          const loanDate = rawDate
+            ? new Date(new Date(rawDate).getTime() + 24 * 60 * 60 * 1000)
+            : null
+          const dateBorrowing = loanDate
+            ? loanDate.toISOString().slice(0, 10)
+            : ''
 
+          const rawExpected = b.expected_return
+          const expectedReturn = rawExpected ? rawExpected.slice(0, 10) : ''
 
+          let status = b.status
+          if (status === 'pendente' && expectedReturn) {
+            const today = new Date().setHours(0, 0, 0, 0)
+            const due = new Date(expectedReturn).setHours(0, 0, 0, 0)
+            if (today > due) status = 'atrasado'
+          }
 
-
-      const rawExpected   = b.expected_return;
-      const expectedReturn= rawExpected ? rawExpected.slice(0,10) : '';
-
-
-      // determina status dinâmico
-      let status = b.status;
-      if (status === 'pendente' && expectedReturn) {
-        const today = new Date().setHours(0,0,0,0);
-        const due   = new Date(expectedReturn).setHours(0,0,0,0);
-        if (today > due) status = 'atrasado';
+          return {
+            id: b.id_borrowing,
+            userName: b.user_name,
+            librarianName: b.librarian_name,
+            bookIsbn: b.book_isbn,
+            bookTitle: b.book_title,
+            dateBorrowing,
+            expectedReturn,
+            status,
+            isLate: status === 'atrasado'
+          }
+        })
+      } catch (err) {
+        console.error('Erro ao carregar empréstimos:', err)
       }
-
-
-      return {
-        id:             b.id_borrowing,
-        userName:       b.user_name,
-        librarianName:  b.librarian_name,
-        bookIsbn:       b.book_isbn,
-        bookTitle:      b.book_title,
-        dateBorrowing,          // agora já incrementado
-        expectedReturn,
-        status,
-        isLate: status === 'atrasado'
-      };
-    });
-  } catch (err) {
-    console.error('Erro ao carregar empréstimos:', err);
-  }
-},
+    },
     applyFilters() {},
     formatDate(d) {
-      return new Date(d).toLocaleDateString('pt-BR');
+      return new Date(d).toLocaleDateString('pt-BR')
     },
     openReturnDialog(loan) {
-      const today = new Date();
-      const expected = new Date(loan.expectedReturn);
-      const diff = Math.ceil((today - expected) / (1000 * 60 * 60 * 24));
-      this.dialog.loan = loan;
-      this.dialog.fine = loan.isLate ? diff : 0;
-      this.showDialog = true;
+      const today = new Date()
+      const expected = new Date(loan.expectedReturn)
+      const diff = Math.ceil((today - expected) / (1000 * 60 * 60 * 24))
+      this.dialog.loan = loan
+      this.dialog.fine = loan.isLate ? diff : 0
+      this.showDialog = true
     },
     closeDialog() {
-      this.showDialog = false;
+      this.showDialog = false
     },
     async confirmReturn() {
-      await fetch(
-        `/api/borrowings/${this.dialog.loan.id}/return`,
-        {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ fine: this.dialog.fine })
-        }
-      );
-      this.showDialog = false;
-      this.fetchLoans();
+      await fetch(`/api/borrowings/${this.dialog.loan.id}/return`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fine: this.dialog.fine })
+      })
+      this.showDialog = false
+      this.fetchLoans()
     }
   },
   created() {
-    this.fetchLoans();
+    this.fetchLoans()
   }
 }
 </script>
 
-
 <style scoped>
-.container { display: flex; min-height: 100vh; margin-left: 15vw;}
-.main-content { flex: 1; padding: 2rem; background: #fff; }
-.filters { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
-.input-field { padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.25rem; }
-.button { padding: 0.5rem 1rem; border: none; border-radius: 0.25rem; cursor: pointer; }
-.table-wrapper { overflow-x: auto; }
-.loans-table { width: 100%; border-collapse: collapse; }
-.loans-table th, .loans-table td { padding: 0.75rem; border-bottom: 1px solid #e2e8f0; text-align: left; }
-.filters select { background: #fff; }
-.modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; }
-.modal-content { background: #fff; padding: 2rem; border-radius: 0.5rem; }
-.action-button { background: #48bb78; color: #fff; }
-.disabled-button { background: #cbd5e1; color: #6b7280; cursor: not-allowed; }
-.returned-row {
-  background-color: #f0fff4;  /* fundo verde claro */
-  color: #2f855a;             /* texto verde escuro */
-  font-weight: bold;
+.container {
+  display: flex;
+  min-height: 100vh;
 }
 
+.main-content {
+  flex: 1;
+  padding: 2rem;
+  padding-left: 260px; /* Largura fixa da Sidebar */
+  background: #f9fafb;
+  color: #1f2937;
+  transition: background 0.3s, color 0.3s;
+}
+
+body.dark-mode .main-content {
+  background: #1f2937;
+  color: #f9fafb;
+}
+
+/* Sidebar fixa */
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 260px; /* mesmo valor do padding-left */
+  height: 100%;
+  background: #1f2937;
+  color: #f9fafb;
+  z-index: 1000;
+}
+
+body.dark-mode .sidebar {
+  background: #111827;
+}
+
+.filters {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.input-field {
+  padding: 0.5rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.25rem;
+  background: #ffffff;
+  color: #1f2937;
+}
+
+body.dark-mode .input-field {
+  background: #374151;
+  border-color: #4b5563;
+  color: #f9fafb;
+}
+
+.button {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 0.25rem;
+  cursor: pointer;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+.loans-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.loans-table th,
+.loans-table td {
+  padding: 0.75rem;
+  border-bottom: 1px solid #e2e8f0;
+  text-align: left;
+}
+
+body.dark-mode .loans-table th,
+body.dark-mode .loans-table td {
+  border-color: #4b5563;
+}
+
+.filters select {
+  background: #fff;
+}
+
+body.dark-mode .filters select {
+  background: #374151;
+  color: #f9fafb;
+}
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-content {
+  background: #ffffff;
+  padding: 2rem;
+  border-radius: 0.5rem;
+}
+
+body.dark-mode .modal-content {
+  background: #1f2937;
+  color: #f9fafb;
+}
+
+.action-button {
+  background: #48bb78;
+  color: #fff;
+}
+
+.disabled-button {
+  background: #cbd5e1;
+  color: #6b7280;
+  cursor: not-allowed;
+}
+
+.returned-row {
+  background-color: #f0fff4;
+  color: #2f855a;
+  font-weight: bold;
+}
 
 .late-row {
-  background-color: #fff5f5;  /* fundo vermelho claro */
-  color: #c53030;             /* texto vermelho escuro */
+  background-color: #fff5f5;
+  color: #c53030;
   font-weight: bold;
 }
+
+body.dark-mode .returned-row {
+  background-color: #22543d;
+  color: #9ae6b4;
+}
+
+body.dark-mode .late-row {
+  background-color: #742a2a;
+  color: #feb2b2;
+}
 </style>
-
-
-

@@ -156,12 +156,14 @@ export default {
   border: 1px solid #d1d5db; /* gray-300 */
   border-radius: 0.5rem;
   outline: none;
+  color: #374151; /* adicionado */
 }
 
 .input-field:focus {
   border-color: #60a5fa; /* blue-400 */
   box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.5);
 }
+
 
 .submit-button {
   width: 100%;
