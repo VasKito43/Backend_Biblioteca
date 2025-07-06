@@ -199,7 +199,8 @@ export default {
       this.fetchLoans()
     }
   },
-  created() {
+  async created() {
+    await fetch('/api/users/recalculate-debts', { method: 'POST' });
     this.fetchLoans()
   }
 }

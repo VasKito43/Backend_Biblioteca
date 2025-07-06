@@ -103,7 +103,13 @@ exports.listarBorrowingsComDetalhes = async () => {
     `SELECT
        b.id AS id_borrowing,
        b.date_borrowing AS dateBorrowing,
-       (b.date_borrowing + INTERVAL '14 days')::date AS expected_return,
+       (b.date_borrowing
+         + CASE t.name
+             WHEN 'student' THEN INTERVAL '14 days'
+             WHEN 'teacher' THEN INTERVAL '30 days'
+             ELSE INTERVAL '14 days'
+           END
+       )::date AS expected_return,
        u.name  AS user_name,
        l.name  AS librarian_name,
        b.book_isbn AS book_isbn,
@@ -115,6 +121,7 @@ exports.listarBorrowingsComDetalhes = async () => {
      JOIN librarian l ON b.librarian_register = l.register
      JOIN books bk ON b.book_isbn        = bk.isbn
      JOIN stats s ON b.stats_id          = s.id
+     JOIN types t ON u.type_id = t.id
      ORDER BY b.date_borrowing DESC`
   );
   return rows;

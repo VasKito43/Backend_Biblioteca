@@ -119,3 +119,53 @@ exports.adicionarDebts = async (userRegister, amount) => {
     [amount, userRegister]
   );
 };
+
+exports.recalcularDebts = async () => {
+  // 1. Busque todos os empréstimos ativos atrasados por usuário
+  const { rows: overdue } = await db.query(`
+    SELECT 
+      u.register AS user_register,
+      GREATEST(
+        DATE_PART('day', CURRENT_DATE - (b.date_borrowing + INTERVAL '14 days')),
+        0
+      )::int AS days_overdue
+    FROM borrowings b
+    JOIN users u ON b.user_register = u.register
+    JOIN types t ON u.type_id = t.id
+    WHERE b.return_date IS NULL
+      AND CURRENT_DATE 
+        > (b.date_borrowing
+           + CASE t.name
+               WHEN 'student' THEN INTERVAL '14 days'
+               WHEN 'teacher' THEN INTERVAL '30 days'
+               ELSE INTERVAL '14 days'
+             END
+          )::date
+  `);
+
+  // 2. Agrupe por usuário
+  const debtsByUser = overdue.reduce((acc, { user_register, days_overdue }) => {
+    acc[user_register] = (acc[user_register] || 0) + days_overdue;
+    return acc;
+  }, {});
+
+  // 3. Para cada usuário, atualize debts e stats_user_id
+  for (const [user_register, debt] of Object.entries(debtsByUser)) {
+    const stats = debt > 0 ? 3 /*owing*/ : 1 /*active*/;
+    await db.query(
+      `UPDATE users 
+         SET debts = $1, stats_user_id = $2 
+       WHERE register = $3`,
+      [debt, stats, user_register]
+    );
+  }
+
+  // 4. Para usuários sem dívida atual (não listados acima), zerar
+  await db.query(`
+    UPDATE users 
+       SET debts = 0, stats_user_id = 1 
+     WHERE register NOT IN (${Object.keys(debtsByUser).join(',')})
+  `);
+
+  return true;
+};

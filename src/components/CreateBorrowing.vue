@@ -153,6 +153,22 @@ export default {
        alert('Usuário não pode realizar empréstimo: pendências existentes.');
        return;
      }
+    const resp = await fetch(
+      `/api/borrowings?user=${this.form.userRegisterId}&active=true`
+    );
+    let ativos = await resp.json();
+    // considerar somente empréstimos não pagos como ativos
+    ativos = ativos.filter(a => a.status !== 'pago');
+    const limite = this.form.userStatsId === 2 /* teacher */ ? 5 : 3;
+
+    console.log(ativos)
+    console.log(limite)
+    if (ativos.length > limite) {
+      alert(`Limite de empréstimos ativos atingido.`);
+      return;
+    }
+
+    // 3) Validar seleção
     if (!this.form.userRegisterId || !this.form.bookIsbn) {
       alert('Por favor, selecione um usuário e um livro.');
       return;
@@ -193,7 +209,9 @@ export default {
   }
 
   },
-  created() {
+  async created() {
+    await fetch('/api/users/recalculate-debts', { method: 'POST' });
+
     this.fetchUsers();
     this.fetchBooks();
   }

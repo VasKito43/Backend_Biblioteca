@@ -11,6 +11,7 @@ const bookController = require('./controller/books.controller');
 const userController = require('./controller/users.controller');
 const borrowingController = require('./controller/borrowings.controller');
 const librarianController = require('./controller/librarian.controller')
+const usersController = require('./controller/users.controller');
 const db = require('./config/database'); // Pra consultas diretas
 
 
@@ -181,6 +182,16 @@ app.get('/api/users/:id', async (req, res) => {
 // ROTAS DE API JSON DE BORROWINGS
 // =============================
 
+app.post('/api/users/recalculate-debts', async (req, res) => {
+  try {
+    await usersController.recalcularDebts();
+    res.status(204).end();
+  } catch (err) {
+    console.error('Erro ao recalcular dívidas:', err);
+    res.status(500).json({ error: 'Falha ao atualizar dívidas.' });
+  }
+});
+
 
 app.post('/api/borrowings', async (req, res) => {
   try {
@@ -248,6 +259,32 @@ app.post('/api/borrowings', async (req, res) => {
 // 2) Listar empréstimos com detalhes (única rota GET /api/borrowings)
 app.get('/api/borrowings', async (req, res) => {
   try {
+    const { user, active } = req.query;
+    if (user && active === 'true') {
+      // só ativos (status != 'pago') daquele usuário
+      const result = await db.query(
+        `SELECT 
+           b.id AS id_borrowing,
+           b.date_borrowing,
+           b.return_date,
+           u.name  AS user_name,
+           l.name  AS librarian_name,
+           b.book_isbn,
+           bk.title AS book_title,
+           s.name    AS status
+         FROM borrowings b
+         JOIN users u         ON b.user_register     = u.register
+         JOIN librarian l     ON b.librarian_register = l.register
+         JOIN books bk        ON b.book_isbn        = bk.isbn
+         JOIN stats s         ON b.stats_id          = s.id
+        WHERE b.user_register = $1
+          AND s.name <> 'pago'`,
+        [user]
+      );
+      return res.json(result.rows);
+    }
+
+    // rota normal (todos os empréstimos com detalhes)
     const rows = await borrowingController.listarBorrowingsComDetalhes();
     res.json(rows);
   } catch (err) {
