@@ -13,7 +13,9 @@
             v-model="searchName"
             class="input-field"
           />
-          <button @click="handleFilter" class="button">Filtrar</button>
+          <router-link to="/users/create" class="button">
+            Cadastrar
+          </router-link>
         </div>
       </header>
 

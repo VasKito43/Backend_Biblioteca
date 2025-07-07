@@ -15,8 +15,10 @@ const userController = require('./controller/users.controller');
 const borrowingController = require('./controller/borrowings.controller');
 const librarianController = require('./controller/librarian.controller')
 const usersController = require('./controller/users.controller');
+const addressesController = require('./controller/addresses.controller');
 const db = require('./config/database'); // Pra consultas diretas
 const { sendBorrowingEmail, sendReturnEmail  } = require('./utils/mailer');
+
 
 
 
@@ -153,6 +155,67 @@ app.delete('/api/books/:isbn', async (req, res) => {
     res.status(500).json({ error: 'Erro ao remover livro.' });
   }
 });
+
+// ROTAS DE API JSON DE ADDRESSES
+app.get('/api/addresses', async (req, res) => {
+  try {
+    const rows = await addressesController.listarAddresses();
+    res.json(rows);
+  } catch (err) {
+    console.error('Erro GET /api/addresses:', err);
+    res.status(500).json({ error: 'Erro ao buscar endereços.' });
+  }
+});
+
+app.post('/api/addresses', async (req, res) => {
+  try {
+    const { cep, houseNumber, complement } = req.body;
+    const created = await addressesController.cadastrarAddress(
+      cep,
+      houseNumber,
+      complement
+    );
+    res.status(201).json(created);
+  } catch (err) {
+    console.error('Erro POST /api/addresses:', err);
+    res.status(500).json({ error: 'Erro ao cadastrar endereço.' });
+  }
+});
+
+// ROTAS DE API JSON DE USERS
+app.post('/api/users', async (req, res) => {
+  try {
+    const {
+      name,
+      dateBirth,
+      email,
+      phone,
+      debts = 0,
+      addressId,
+      typeId,
+      statsUserId,
+      linkImg = null
+    } = req.body;
+
+    const created = await userController.cadastrarUser(
+      name,
+      dateBirth,
+      email,
+      phone,
+      debts,
+      addressId,
+      typeId,
+      statsUserId,
+      linkImg
+    );
+    return res.status(201).json(created);
+  } catch (err) {
+    console.error('Erro no POST /api/users:', err);
+    // retorna a mensagem de erro real para o front
+    return res.status(500).json({ error: err.message });
+  }
+});
+
 
 // =============================
 // ROTAS DE API JSON DE USERS

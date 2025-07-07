@@ -8,6 +8,7 @@ import UsersPage        from './components/UsersPage.vue'
 import BorrowingPage    from './components/Borrowing.vue'
 import CreateBorrowing  from './components/CreateBorrowing.vue'
 import PayBorrowings    from './components/PayBorrowings.vue'
+import CreateUser from './components/CreateUser.vue'
 
 const routes = [
   {
@@ -19,6 +20,12 @@ const routes = [
     path: '/books',
     name: 'BooksPage',
     component: BooksPage,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/users/create',
+    name: 'CreateUser',
+    component: CreateUser,
     meta: { requiresAuth: true }
   },
   {

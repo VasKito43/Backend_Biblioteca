@@ -1,3 +1,4 @@
+// controller/addresses.controller.js
 const db = require('../config/database');
 
 /**
@@ -5,12 +6,12 @@ const db = require('../config/database');
  */
 exports.listarAddresses = async () => {
   const { rows } = await db.query(
-    `SELECT 
-       id AS id_address, 
-       cep, 
-       house_number AS houseNumber, 
-       complement 
-     FROM addresses 
+    `SELECT
+       id         AS "idAddress",
+       cep,
+       house_number AS "houseNumber",
+       complement
+     FROM addresses
      ORDER BY id`
   );
   return rows;
@@ -18,12 +19,17 @@ exports.listarAddresses = async () => {
 
 /**
  * Cadastra um novo endereço em 'addresses'.
+ * Agora retorna idAddress em camelCase.
  */
 exports.cadastrarAddress = async (cep, houseNumber, complement) => {
   const { rows } = await db.query(
     `INSERT INTO addresses (cep, house_number, complement)
      VALUES ($1, $2, $3)
-     RETURNING id AS id_address, cep, house_number AS houseNumber, complement`,
+     RETURNING
+       id           AS "idAddress",
+       cep,
+       house_number AS "houseNumber",
+       complement`,
     [cep, houseNumber, complement]
   );
   return rows[0];
@@ -32,13 +38,17 @@ exports.cadastrarAddress = async (cep, houseNumber, complement) => {
 /**
  * Altera um endereço existente pelo id.
  */
-exports.alterarAddress = async (id_address, cep, houseNumber, complement) => {
+exports.alterarAddress = async (idAddress, cep, houseNumber, complement) => {
   const { rows } = await db.query(
-    `UPDATE addresses 
-     SET cep = $1, house_number = $2, complement = $3 
-     WHERE id = $4 
-     RETURNING id AS id_address, cep, house_number AS houseNumber, complement`,
-    [cep, houseNumber, complement, id_address]
+    `UPDATE addresses
+     SET cep = $1, house_number = $2, complement = $3
+     WHERE id = $4
+     RETURNING
+       id           AS "idAddress",
+       cep,
+       house_number AS "houseNumber",
+       complement`,
+    [cep, houseNumber, complement, idAddress]
   );
   if (rows.length === 0) throw new Error('Address não encontrado para alterar');
   return rows[0];
@@ -47,10 +57,10 @@ exports.alterarAddress = async (id_address, cep, houseNumber, complement) => {
 /**
  * Remove um endereço pelo id.
  */
-exports.removerAddress = async (id_address) => {
+exports.removerAddress = async (idAddress) => {
   const { rowCount } = await db.query(
-    'DELETE FROM addresses WHERE id = $1',
-    [id_address]
+    `DELETE FROM addresses WHERE id = $1`,
+    [idAddress]
   );
   if (rowCount === 0) throw new Error('Address não encontrado para remover');
   return true;
