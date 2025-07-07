@@ -27,4 +27,16 @@ async function sendBorrowingEmail(to, userName, bookTitle, dueDate) {
   });
 }
 
-module.exports = { sendBorrowingEmail };
+async function sendReturnEmail(to, name, title, fine) {
+   const mailOptions = {
+     from:    process.env.SMTP_USER,
+     to,
+     subject: `Devolução de "${title}" registrada`,
+     html:    `<p>Olá ${name},</p>
+               <p>Seu empréstimo do livro "<strong>${title}</strong>" foi devolvido com sucesso.</p>
+               <p>Multa paga: R$ ${fine.toFixed(2)}</p>`
+   };
+   return transporter.sendMail(mailOptions);
+ }
+
+module.exports = { sendBorrowingEmail, sendReturnEmail };

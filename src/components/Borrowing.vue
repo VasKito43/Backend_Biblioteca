@@ -51,10 +51,15 @@
               <td>
                 <template v-if="loan.status !== 'pago'">
                   <button
+                    v-if="loan.status !== 'pago'"
                     @click="openReturnDialog(loan)"
                     class="button action-button"
+                    :disabled="returnLoading && currentReturnId === loan.id"
                   >
-                    {{ loan.isLate ? 'Pagar e Devolver' : 'Devolver' }}
+                    <span v-if="!(returnLoading && currentReturnId === loan.id)">
+                      {{ loan.isLate ? 'Pagar e Devolver' : 'Devolver' }}
+                    </span>
+                    <span v-else>Processando...</span>
                   </button>
                 </template>
                 <template v-else>
@@ -89,6 +94,8 @@ export default {
   data() {
     return {
       loans: [],
+      returnLoading: false,
+      currentReturnId: null,
       statusOptions: [
         { id: 1, name: 'pendente' },
         { id: 2, name: 'pago' },
@@ -190,13 +197,27 @@ export default {
       this.showDialog = false
     },
     async confirmReturn() {
-      await fetch(`/api/borrowings/${this.dialog.loan.id}/return`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fine: this.dialog.fine })
-      })
-      this.showDialog = false
-      this.fetchLoans()
+      // ativa loading e marca qual empréstimo está sendo processado
+      this.returnLoading = true
+      this.currentReturnId = this.dialog.loan.id
+      try {
+        await fetch(
+          `/api/borrowings/${this.currentReturnId}/return`,
+          {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ fine: this.dialog.fine })
+          }
+        )
+        this.fetchLoans()
+      } catch (err) {
+        console.error('Erro ao devolver empréstimo:', err)
+      } finally {
+        // desativa loading, limpa estado e fecha diálogo
+        this.returnLoading = false
+        this.currentReturnId = null
+        this.showDialog = false
+      }
     }
   },
   async created() {

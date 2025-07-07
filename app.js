@@ -16,7 +16,7 @@ const borrowingController = require('./controller/borrowings.controller');
 const librarianController = require('./controller/librarian.controller')
 const usersController = require('./controller/users.controller');
 const db = require('./config/database'); // Pra consultas diretas
-const { sendBorrowingEmail } = require('./utils/mailer');
+const { sendBorrowingEmail, sendReturnEmail  } = require('./utils/mailer');
 
 
 
@@ -326,11 +326,34 @@ app.put('/api/borrowings/:id/return', async (req, res) => {
   try {
     const id = parseInt(req.params.id, 10);
     const { fine } = req.body;
+    // 1) Executa a lógica de devolução
     const result = await borrowingController.devolverBorrowing(id, fine || 0);
-    res.json({ message: 'Devolução registrada', ...result });
+    // 2) Busca dados para o e‑mail
+    const { rows: [ user ] } = await db.query(
+      `SELECT u.name, u.email, bk.title
+         FROM borrowings b
+         JOIN users u ON b.user_register = u.register
+         JOIN books bk ON b.book_isbn   = bk.isbn
+        WHERE b.id = $1`,
+      [id]
+    );
+
+    // 3) Envia e‑mail de devolução
+    try {
+      await sendReturnEmail(
+        user.email,
+        user.name,
+        user.title,   // título do livro
+        fine || 0     // multa paga
+      );
+    } catch (mailErr) {
+      console.error('Erro ao enviar e‑mail de devolução:', mailErr);
+    }
+
+    return res.json({ message: 'Devolução registrada', ...result });
   } catch (err) {
     console.error('Erro ao devolver empréstimo:', err);
-    res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: err.message });
   }
 });
 

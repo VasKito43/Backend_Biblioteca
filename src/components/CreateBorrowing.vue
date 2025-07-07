@@ -55,7 +55,14 @@
           </ul>
         </div>
 
-        <button type="submit" class="submit-btn form-group-mt">Cadastrar Empréstimo</button>
+        <button
+          type="submit"
+          class="submit-btn form-group-mt"
+          :disabled="loading"
+        >
+          <span v-if="!loading">Cadastrar Empréstimo</span>
+          <span v-else>Carregando...</span>
+        </button>
       </form>
     </main>
   </div>
@@ -73,6 +80,7 @@ export default {
       books: [],
       showUserDropdown: false,
       showBookDropdown: false,
+      loading: false,
       form: {
         userRegister: '',
         userRegisterId: null,
@@ -149,6 +157,7 @@ export default {
       return `https://covers.openlibrary.org/b/isbn/${isbn}-S.jpg`;
     },
     async submitForm() {
+    this.loading = true;
     if (this.form.userStatsId !== 1) {
        alert('Usuário não pode realizar empréstimo: pendências existentes.');
        return;
@@ -205,7 +214,9 @@ export default {
     } catch (err) {
       console.error(err);
       alert('Ocorreu um erro ao cadastrar o empréstimo.');
-    }
+    }finally {
+     this.loading = false;
+  }
   }
 
   },

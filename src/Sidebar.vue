@@ -39,7 +39,6 @@
           <li><button @click="$router.push('/users')" class="nav-btn">Users</button></li>
           <li><button @click="$router.push('/borrowing')" class="nav-btn">Borrowing</button></li>
           <li><button @click="$router.push('/borrowing/create')" class="nav-btn">Novo Empréstimo</button></li>
-          <li><button @click="$router.push('/borrowings/pay')" class="nav-btn">Pagar Empréstimos</button></li>
           <li class="logout-item"><button @click="logout" class="nav-btn">Sair</button></li>
         </ul>
       </nav>
