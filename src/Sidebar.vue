@@ -1,6 +1,21 @@
 <template>
   <div :class="{ 'dark-mode': darkMode }" class="app-container">
-    <aside class="sidebar">
+    <!-- Botão hamburguer para telas pequenas -->
+    <button v-show="!sidebarVisible" @click="toggleSidebar" class="hamburger-btn">
+      <svg xmlns="http://www.w3.org/2000/svg" class="icon hamburger" viewBox="0 0 24 24" stroke="currentColor" fill="none">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M4 6h16M4 12h16M4 18h16" />
+      </svg>
+    </button>
+
+    <div 
+      v-if="sidebarVisible && isMobile" 
+      class="overlay" 
+      @click="sidebarVisible = false">
+    </div>
+
+    <!-- Sidebar -->
+    <aside v-show="sidebarVisible" class="sidebar">
       <div class="sidebar-header">
         <h1 class="sidebar-title">BIG BEG AVIARAS</h1>
         <button @click="toggleDarkMode" class="toggle-btn">
@@ -14,6 +29,7 @@
           </svg>
         </button>
       </div>
+
       <nav class="sidebar-nav">
         <ul>
           <li><button @click="$router.push('/books')" class="nav-btn">Books</button></li>
@@ -25,7 +41,11 @@
         </ul>
       </nav>
     </aside>
-    <slot />
+
+    <!-- Conteúdo principal -->
+    <div class="main-content">
+      <slot />
+    </div>
   </div>
 </template>
 
@@ -33,61 +53,99 @@
 export default {
   name: 'Sidebar',
   data() {
-    return { darkMode: false }
-  },
-  created() {
-  const saved = localStorage.getItem('darkMode');
-  this.darkMode = saved !== null
-    ? saved === 'true'
-    : window.matchMedia('(prefers-color-scheme: dark)').matches;
-
-  // Sincroniza a classe body na criação
-  if (this.darkMode) {
-    document.body.classList.add('dark-mode');
-  } else {
-    document.body.classList.remove('dark-mode');
+  return {
+    darkMode: false,
+    sidebarVisible: true,
+    isMobile: window.innerWidth < 1024
   }
 },
-  methods: {
-    toggleDarkMode() {
-      this.darkMode = !this.darkMode
-      localStorage.setItem('darkMode', this.darkMode)
-
-      if (this.darkMode) {
-        document.body.classList.add('dark-mode')
-      } else {
-        document.body.classList.remove('dark-mode')
-      }
-    },
-    logout() {
-      localStorage.removeItem('isAuthenticated')
-      this.$router.push('/')
+methods: {
+  toggleDarkMode() {
+    this.darkMode = !this.darkMode
+    localStorage.setItem('darkMode', this.darkMode)
+    document.body.classList.toggle('dark-mode', this.darkMode)
+  },
+  toggleSidebar() {
+    this.sidebarVisible = !this.sidebarVisible
+  },
+  handleResize() {
+    this.isMobile = window.innerWidth < 1024
+    if (!this.isMobile) {
+      this.sidebarVisible = true
     }
+  },
+  logout() {
+    localStorage.removeItem('isAuthenticated')
+    this.$router.push('/')
   }
-}
+},
+created() {
+  const saved = localStorage.getItem('darkMode')
+  this.darkMode = saved !== null
+    ? saved === 'true'
+    : window.matchMedia('(prefers-color-scheme: dark)').matches
+
+  document.body.classList.toggle('dark-mode', this.darkMode)
+
+  this.isMobile = window.innerWidth < 1024
+  if (this.isMobile) this.sidebarVisible = false
+
+  window.addEventListener('resize', this.handleResize)
+},
+beforeUnmount() {
+  window.removeEventListener('resize', this.handleResize)
+}}
+
 </script>
 
 <style scoped>
-.app-container {
-  display: flex;
-}
-.dark-mode {
-  background-color: #111827;
-  color: #f9fafb;
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.4);
+  z-index: 30;
 }
 
+
+.app-container {
+  display: flex;
+  flex-direction: row;
+}
+
+/* Botão hamburguer */
+.hamburger-btn {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  z-index: 50;
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: none;
+}
+.icon.hamburger {
+  width: 2rem;
+  height: 2rem;
+  color: inherit;
+}
+
+/* Sidebar */
 .sidebar {
-  position: fixed;   /* <-- faz a mágica de ficar fixa */
+  position: fixed;
   top: 0;
   left: 0;
   width: 260px;
-  height: 100vh;     /* ocupa toda a altura da viewport */
+  height: 100vh;
   background-color: #ffffff;
   color: #1f2937;
   border-right: 1px solid #e5e7eb;
   display: flex;
   flex-direction: column;
   padding: 1rem;
+  z-index: 40;
 }
 .dark-mode .sidebar {
   background-color: #1f2937;
@@ -120,12 +178,12 @@ export default {
 .moon {
   color: #4b5563;
 }
+
 .sidebar-nav {
-  flex: 1; /* faz o nav ocupar todo espaço vertical da sidebar */
+  flex: 1;
   display: flex;
   flex-direction: column;
 }
-
 .sidebar-nav ul {
   list-style: none;
   padding: 0;
@@ -134,7 +192,6 @@ export default {
   display: flex;
   flex-direction: column;
 }
-
 .nav-btn {
   width: 100%;
   background: none;
@@ -155,14 +212,32 @@ export default {
 }
 
 .logout-item {
-  margin-top: auto; /* empurra pra baixo */
+  margin-top: auto;
 }
+
+/* Conteúdo */
 .main-content {
-  margin-left: 260px;  /* <-- empurra o conteúdo pro lado da sidebar */
+  margin-left: 260px;
   flex: 1;
   padding: 20px;
   overflow-y: auto;
   min-height: 100vh;
 }
+
+/* Responsivo */
+@media (max-width: 1024px) {
+  .sidebar {
+    position: fixed;
+    width: 260px;
+    transform: translateX(0);
+  }
+
+  .main-content {
+    margin-left: 0;
+  }
+
+  .hamburger-btn {
+    display: block;
+  }
+}
 </style>
-<!-- o botão de sair da sidebar está sumindo dela, tem como deixalo um pouco mais acima -->

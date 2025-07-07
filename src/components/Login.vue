@@ -91,10 +91,12 @@ export default {
 </script>
 
 <style scoped>
-/* Container geral */
 .container {
   display: flex;
+  flex-direction: row;
   height: 100vh;
+  width: 100vw;
+  overflow: hidden;
 }
 
 /* Área de imagem */
@@ -120,7 +122,7 @@ export default {
   padding: 2rem;
   border-radius: 0.5rem;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  width: 24rem; /* 96 */
+  width: 24rem;
 }
 
 .icon-wrapper {
@@ -132,7 +134,7 @@ export default {
 .user-icon {
   width: 5rem;
   height: 5rem;
-  color: #6b7280; /* gray-500 */
+  color: #6b7280;
 }
 
 .login-form {
@@ -147,23 +149,22 @@ export default {
 .form-group label {
   display: block;
   margin-bottom: 0.5rem;
-  color: #374151; /* gray-700 */
+  color: #374151;
 }
 
 .input-field {
   width: 100%;
   padding: 0.5rem;
-  border: 1px solid #d1d5db; /* gray-300 */
+  border: 1px solid #d1d5db;
   border-radius: 0.5rem;
   outline: none;
-  color: #374151; /* adicionado */
+  color: #374151;
 }
 
 .input-field:focus {
-  border-color: #60a5fa; /* blue-400 */
+  border-color: #60a5fa;
   box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.5);
 }
-
 
 .submit-button {
   width: 100%;
@@ -177,7 +178,7 @@ export default {
 }
 
 .submit-button:hover {
-  background-color: #374151; /* gray-800 */
+  background-color: #374151;
 }
 
 .links {
@@ -188,7 +189,7 @@ export default {
 }
 
 .links a {
-  color: #2563eb; /* blue-600 */
+  color: #2563eb;
   text-decoration: none;
 }
 
@@ -201,4 +202,39 @@ export default {
   margin-top: 0.75rem;
   text-align: center;
 }
+
+/* RESPONSIVO: esconder imagem e ocupar 100% com fundo único */
+@media (max-width: 1024px) {
+  .container {
+    flex-direction: column;
+    background-color: #496090;
+  }
+
+  .image-area {
+    display: none;
+  }
+
+  .form-area {
+    flex: none;
+    width: 100%;
+    height: 100vh;
+    background-color: #496090;
+    justify-content: center;
+    align-items: center;
+    display: flex;
+  }
+
+  .form-container {
+    width: 90%;
+    max-width: 22rem;
+    margin: auto;
+  }
+
+  .user-icon {
+    width: 4rem;
+    height: 4rem;
+  }
+}
+
+
 </style>

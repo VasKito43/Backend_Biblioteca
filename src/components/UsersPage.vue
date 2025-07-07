@@ -1,7 +1,6 @@
 <template>
   <div class="container">
-
-   <div class="sidebar">
+    <div class="sidebar">
       <Sidebar />
     </div>
     <main class="main-content">
@@ -68,16 +67,15 @@ export default {
   },
   computed: {
     filteredUsers() {
-      if (!this.searchName) return this.users
-      return this.users.filter(user =>
-        user.name.toLowerCase().includes(this.searchName.toLowerCase())
-      )
+      return this.searchName
+        ? this.users.filter(user =>
+            user.name.toLowerCase().includes(this.searchName.toLowerCase())
+          )
+        : this.users
     },
   },
   methods: {
-    handleFilter() {
-      // filtro reativo via computed
-    },
+    handleFilter() {},
     async fetchUsers() {
       try {
         const res = await fetch('/api/users')
@@ -98,8 +96,7 @@ export default {
       }
     },
     formatDate(dateStr) {
-      if (!dateStr) return '-'
-      return new Date(dateStr).toLocaleDateString('pt-BR')
+      return dateStr ? new Date(dateStr).toLocaleDateString('pt-BR') : '-'
     },
   },
   mounted() {
@@ -109,16 +106,23 @@ export default {
 </script>
 
 <style scoped>
+/* Force full height */
+:root, html, body {
+  height: 100%;
+  margin: 0;
+}
+
+/* Container e sidebar */
+/* Container e sidebar */
 .container {
   display: flex;
   min-height: 100vh;
-  color: #333;
-  background-color: #f5f5f5;
+  background: #f5f5f5;
 }
 
 .sidebar {
   width: 240px;
-  background: #ffffff;
+  background: #fff;
   border-right: 1px solid #ddd;
   padding: 20px;
 }
@@ -127,6 +131,7 @@ export default {
   flex: 1;
   padding: 20px;
   overflow-y: auto;
+  min-width: 0; /* allow flex child to shrink */
 }
 
 .header-search {
@@ -157,16 +162,16 @@ export default {
 
 .button {
   padding: 8px 16px;
-  background-color: #1976d2;
+  background: #1976d2;
   color: #fff;
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: background 0.2s;
 }
 
 .button:hover {
-  background-color: #1565c0;
+  background: #1565c0;
 }
 
 .table-wrapper {
@@ -174,9 +179,11 @@ export default {
   background: #fff;
   border-radius: 4px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  width: 100%;
 }
 
 .users-table {
+  min-width: 600px;
   width: 100%;
   border-collapse: collapse;
 }
@@ -186,16 +193,16 @@ export default {
   padding: 12px;
   text-align: left;
   border-bottom: 1px solid #eee;
+  white-space: nowrap;
 }
 
 .users-table thead th {
-  background-color: #fafafa;
+  background: #fafafa;
   font-weight: bold;
-  font-size: 0.95rem;
 }
 
 .users-table tbody tr:hover {
-  background-color: #f0f0f0;
+  background: #f0f0f0;
 }
 
 .debits-cell {
@@ -209,6 +216,59 @@ export default {
   height: 32px;
   border-radius: 50%;
   object-fit: cover;
-  border: 1px solid #ccc;
+}
+
+/* Responsividade */
+@media (max-width: 1024px) {
+  .container {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid #ddd;
+    padding: 10px 15px;
+  }
+
+  .main-content {
+    padding: 15px 10px 30px;
+  }
+
+  .header-search {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .header-search h1 {
+    font-size: 1.5rem;
+  }
+
+  .search-controls {
+    width: 100%;
+    gap: 8px;
+  }
+
+  .input-field {
+    max-width: 100%;
+  }
+
+  .button {
+    width: 100%;
+    padding: 10px;
+  }
+
+  .users-table th,
+  .users-table td {
+    padding: 8px 6px;
+    font-size: 0.9rem;
+    white-space: nowrap;
+  }
+
+  .avatar {
+    width: 28px;
+    height: 28px;
+  }
 }
 </style>
