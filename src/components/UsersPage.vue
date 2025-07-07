@@ -1,5 +1,5 @@
 <template>
-  <div class="container">
+  <div :class="{ 'dark-mode': darkMode }" class="app-container">
     <div class="sidebar">
       <Sidebar />
     </div>
@@ -17,37 +17,44 @@
         </div>
       </header>
 
-      <section class="table-wrapper">
-        <table class="users-table">
-          <thead>
-            <tr>
-              <th>Data</th>
-              <th>Nome</th>
-              <th>Email</th>
-              <th>Telefone</th>
-              <th>Dias</th>
-              <th>Débitos</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="user in filteredUsers" :key="user.id_user">
-              <td>{{ formatDate(user.dateBirth) }}</td>
-              <td>{{ user.name }}</td>
-              <td>{{ user.email }}</td>
-              <td>{{ user.phone }}</td>
-              <td>{{ user.days || '-' }}</td>
-              <td class="debits-cell">
-                <span>{{ user.debts }}</span>
-                <img
-                  v-if="user.avatar"
-                  :src="user.avatar"
-                  alt="Avatar"
-                  class="avatar"
-                />
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      <!-- Cards de Usuários -->
+      <section class="cards-wrapper">
+        <div
+          class="user-card"
+          v-for="user in filteredUsers"
+          :key="user.id_user"
+        >
+          <div class="card-row">
+            <span class="label">Data:</span>
+            <span class="value">{{ formatDate(user.dateBirth) }}</span>
+          </div>
+          <div class="card-row">
+            <span class="label">Nome:</span>
+            <span class="value">{{ user.name }}</span>
+          </div>
+          <div class="card-row">
+            <span class="label">Email:</span>
+            <span class="value">{{ user.email }}</span>
+          </div>
+          <div class="card-row">
+            <span class="label">Telefone:</span>
+            <span class="value">{{ user.phone }}</span>
+          </div>
+          <div class="card-row">
+            <span class="label">Dias:</span>
+            <span class="value">{{ user.days || '-' }}</span>
+          </div>
+          <div class="card-row debits-row">
+            <span class="label">Débitos:</span>
+            <span class="value">{{ user.debts }}</span>
+            <img
+              v-if="user.avatar"
+              :src="user.avatar"
+              alt="Avatar"
+              class="avatar"
+            />
+          </div>
+        </div>
       </section>
     </main>
   </div>
@@ -63,6 +70,7 @@ export default {
     return {
       searchName: '',
       users: [],
+      darkMode: localStorage.getItem('darkMode') === 'true'
     }
   },
   computed: {
@@ -101,29 +109,40 @@ export default {
   },
   mounted() {
     this.fetchUsers()
+    // aplica classe dark-mode ao body
+    document.body.classList.toggle('dark-mode', this.darkMode)
   },
+  watch: {
+    darkMode(val) {
+      localStorage.setItem('darkMode', val)
+      document.body.classList.toggle('dark-mode', val)
+    }
+  }
 }
 </script>
 
 <style scoped>
-/* Force full height */
+/* Força full height */
 :root, html, body {
   height: 100%;
   margin: 0;
 }
 
-/* Container e sidebar */
+.container, .app-container {
+  display: flex;
+}
+
 /* Container e sidebar */
 .container {
   display: flex;
   min-height: 100vh;
-  background: #f5f5f5;
+  background: var(--bg-color);
 }
 
 .sidebar {
   width: 240px;
-  background: #fff;
-  border-right: 1px solid #ddd;
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--border-color);
   padding: 20px;
 }
 
@@ -131,12 +150,12 @@ export default {
   flex: 1;
   padding: 20px;
   overflow-y: auto;
-  min-width: 0; /* allow flex child to shrink */
+  min-width: 0;
+  background: var(--bg-color);
 }
 
 .header-search {
   display: flex;
-  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
@@ -145,24 +164,22 @@ export default {
 .header-search h1 {
   margin: 0;
   font-size: 1.8rem;
-}
-
-.search-controls {
-  display: flex;
-  gap: 10px;
+  color: var(--text-color);
 }
 
 .input-field {
   padding: 8px 12px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--border-color);
   border-radius: 4px;
   flex: 1;
   max-width: 200px;
+  background: var(--input-bg);
+  color: var(--text-color);
 }
 
 .button {
   padding: 8px 16px;
-  background: #1976d2;
+  background: var(--primary-color);
   color: #fff;
   border: none;
   border-radius: 4px;
@@ -171,43 +188,44 @@ export default {
 }
 
 .button:hover {
-  background: #1565c0;
+  background: var(--primary-hover);
 }
 
-.table-wrapper {
-  overflow-x: auto;
-  background: #fff;
-  border-radius: 4px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  width: 100%;
+/* Grid de cards */
+.cards-wrapper {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
 }
 
-.users-table {
-  min-width: 600px;
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.users-table th,
-.users-table td {
-  padding: 12px;
-  text-align: left;
-  border-bottom: 1px solid #eee;
-  white-space: nowrap;
-}
-
-.users-table thead th {
-  background: #fafafa;
-  font-weight: bold;
-}
-
-.users-table tbody tr:hover {
-  background: #f0f0f0;
-}
-
-.debits-cell {
+.user-card {
+  background: var(--card-bg);
+  color: var(--text-color);
+  border-radius: 6px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+  padding: 16px;
   display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.card-row {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
+}
+
+.label {
+  font-weight: 600;
+}
+
+.value {
+  text-align: right;
+  word-break: break-word;
+}
+
+.debits-row {
   gap: 8px;
 }
 
@@ -218,16 +236,35 @@ export default {
   object-fit: cover;
 }
 
-/* Responsividade */
-@media (max-width: 1024px) {
-  .container {
-    flex-direction: column;
-  }
+/* Dark mode variables */
+:root {
+  --bg-color: #f5f5f5;
+  --sidebar-bg: #ffffff;
+  --card-bg: #ffffff;
+  --input-bg: #ffffff;
+  --border-color: #ddd;
+  --text-color: #111827;
+  --primary-color: #1976d2;
+  --primary-hover: #1565c0;
+}
 
+.dark-mode {
+  --bg-color: #1f2937;
+  --sidebar-bg: #111827;
+  --card-bg: #374151;
+  --input-bg: #374151;
+  --border-color: #4b5563;
+  --text-color: #f9fafb;
+  --primary-color: #2563eb;
+  --primary-hover: #1e40af;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
   .sidebar {
     width: 100%;
     border-right: none;
-    border-bottom: 1px solid #ddd;
+    border-bottom: 1px solid var(--border-color);
     padding: 10px 15px;
   }
 
@@ -245,11 +282,6 @@ export default {
     font-size: 1.5rem;
   }
 
-  .search-controls {
-    width: 100%;
-    gap: 8px;
-  }
-
   .input-field {
     max-width: 100%;
   }
@@ -259,16 +291,8 @@ export default {
     padding: 10px;
   }
 
-  .users-table th,
-  .users-table td {
-    padding: 8px 6px;
-    font-size: 0.9rem;
-    white-space: nowrap;
-  }
-
-  .avatar {
-    width: 28px;
-    height: 28px;
+  .user-card {
+    padding: 12px;
   }
 }
 </style>
