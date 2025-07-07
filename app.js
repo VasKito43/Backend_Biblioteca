@@ -1,9 +1,12 @@
+require('dotenv').config();
+
 // app.js
 const path = require('path');
 const express = require('express');
 const handlebars = require('express-handlebars');
 const bodyParser = require('body-parser');
 const fileupload = require('express-fileupload');
+
 
 // controllers
 const testeController = require('./controller/teste.controller');
@@ -13,6 +16,7 @@ const borrowingController = require('./controller/borrowings.controller');
 const librarianController = require('./controller/librarian.controller')
 const usersController = require('./controller/users.controller');
 const db = require('./config/database'); // Pra consultas diretas
+const { sendBorrowingEmail } = require('./utils/mailer');
 
 
 
@@ -197,10 +201,9 @@ app.post('/api/borrowings', async (req, res) => {
   try {
     const { user_register, librarian_register, book_isbn, date_borrowing, return_date } = req.body;
 
-
     // Verifica usuário ativo
     const userCheck = await db.query(
-      `SELECT su.name AS status
+      `SELECT u.name, u.email, su.name AS status
          FROM users u
          JOIN stats_users su ON u.stats_user_id = su.id
         WHERE u.register = $1`,
@@ -210,10 +213,11 @@ app.post('/api/borrowings', async (req, res) => {
       return res.status(400).json({ error: 'Usuário não ativo ou não encontrado.' });
     }
 
+    const { name: userName, email: userEmail, role: userRole } = userCheck.rows[0]; // agora pegamos também o campo role
 
     // Verifica livro disponível
     const bookCheck = await db.query(
-      `SELECT quantity_available
+      `SELECT title, quantity_available
          FROM books
         WHERE isbn = $1`,
       [book_isbn]
@@ -225,17 +229,17 @@ app.post('/api/borrowings', async (req, res) => {
       return res.status(400).json({ error: 'Livro sem cópias disponíveis.' });
     }
 
+    const bookTitle = bookCheck.rows[0].title;
 
     // Cadastra empréstimo
     const created = await borrowingController.cadastrarBorrowing(
       user_register,
       librarian_register,
       book_isbn,
-      /* stats_id */ 1,
+      1, // stats_id = 1
       date_borrowing,
       return_date
     );
-
 
     // Decrementa estoque
     await db.query(
@@ -245,15 +249,38 @@ app.post('/api/borrowings', async (req, res) => {
       [book_isbn]
     );
 
+    // 5) Recuperar dados do usuário e do livro para o e‑mail
+   const { rows: [ user ] } = await db.query(
+        `SELECT name, email, type_id FROM users WHERE register = $1`,
+        [user_register]
+      );
+      const { rows: [ book ] } = await db.query(
+        `SELECT title FROM books WHERE isbn = $1`,
+        [book_isbn]
+      );
+      // Calcular data prevista de devolução (14 dias após)
+      
+      const periodDays = user.type_id === 2 ? 30 : 14;
+      const due = new Date(date_borrowing);
+      due.setDate(due.getDate() + periodDays);
+      const dueDateStr = due.toISOString().slice(0,10).split('-').reverse().join('/');
+ 
+      // 6) Enviar e‑mail de confirmação
+      try {
+        await sendBorrowingEmail(user.email, user.name, book.title, dueDateStr);
+      } catch (mailErr) {
+        console.error('Erro ao enviar e‑mail:', mailErr);
+        // não falha toda a API se o e‑mail der erro
+      }
 
     return res.status(201).json(created);
-
 
   } catch (err) {
     console.error('Erro ao criar empréstimo:', err);
     return res.status(500).json({ error: 'Erro ao criar empréstimo.' });
   }
 });
+
 
 
 // 2) Listar empréstimos com detalhes (única rota GET /api/borrowings)
