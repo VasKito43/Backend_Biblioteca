@@ -85,7 +85,6 @@ export default {
     },
   },
   methods: {
-    handleFilter() {},
     async fetchUsers() {
       try {
         const res = await fetch('/api/users')
@@ -107,11 +106,10 @@ export default {
     },
     formatDate(dateStr) {
       return dateStr ? new Date(dateStr).toLocaleDateString('pt-BR') : '-'
-    },
+    }
   },
   mounted() {
     this.fetchUsers()
-    // aplica classe dark-mode ao body
     document.body.classList.toggle('dark-mode', this.darkMode)
   },
   watch: {
@@ -124,177 +122,111 @@ export default {
 </script>
 
 <style scoped>
-/* Força full height */
 :root, html, body {
-  height: 100%;
-  margin: 0;
+  height: 100%; margin: 0;
 }
-
-.container, .app-container {
-  display: flex;
-}
-
-/* Container e sidebar */
-.container {
+.app-container, .container {
   display: flex;
   min-height: 100vh;
-  background: var(--bg-color);
 }
-
-.sidebar {
-  width: 240px;
-  background: var(--sidebar-bg);
-  border-right: 1px solid var(--border-color);
+/* .sidebar {
+  background: var(--sidebar-bg, #ffffff);
+  border-right: 1px solid var(--border-color, #ddd);
   padding: 20px;
-}
-
+} */
 .main-content {
   flex: 1;
   padding: 20px;
+  margin-left: 240px;
+  background: var(--bg-color, #f5f5f5);
   overflow-y: auto;
-  min-width: 0;
-  background: var(--bg-color);
+  transition: background 0.3s;
 }
-
 .header-search {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
 }
-
 .header-search h1 {
-  margin: 0;
   font-size: 1.8rem;
-  color: var(--text-color);
+  color: var(--text-color, #111827);
 }
-
+.search-controls {
+  display: flex;
+  align-items: center;
+}
 .input-field {
+  margin-right: 16px;
   padding: 8px 12px;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border-color, #ddd);
   border-radius: 4px;
-  flex: 1;
-  max-width: 200px;
-  background: var(--input-bg);
-  color: var(--text-color);
+  background: var(--input-bg, #ffffff);
+  color: var(--text-color, #111827);
 }
-
 .button {
   padding: 8px 16px;
-  background: var(--primary-color);
-  color: #fff;
+  background: #1976d2;
+  color: #ffffff;
   border: none;
   border-radius: 4px;
   cursor: pointer;
   transition: background 0.2s;
 }
-
 .button:hover {
-  background: var(--primary-hover);
+  background: #1565c0;
 }
-
-/* Grid de cards */
+body.dark-mode .button {
+  background: #2563eb;
+}
+body.dark-mode .button:hover {
+  background: #1e40af;
+}
 .cards-wrapper {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(20vw, 1fr));
   gap: 16px;
 }
-
 .user-card {
-  background: var(--card-bg);
-  color: var(--text-color);
+  background: var(--card-bg, #ffffff);
+  color: var(--text-color, #111827);
+  border: 1px solid var(--border-color, #ddd);
   border-radius: 6px;
   box-shadow: 0 1px 4px rgba(0,0,0,0.1);
   padding: 16px;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  border: 1px solid var(--border-color);
 }
-
 .card-row {
   display: flex;
   justify-content: space-between;
-  align-items: center;
 }
-
-.label {
-  font-weight: 600;
-}
-
-.value {
-  text-align: right;
-  word-break: break-word;
-}
-
-.debits-row {
-  gap: 8px;
-}
-
 .avatar {
   width: 32px;
   height: 32px;
   border-radius: 50%;
   object-fit: cover;
 }
-
-/* Dark mode variables */
-:root {
-  --bg-color: #f5f5f5;
-  --sidebar-bg: #ffffff;
-  --card-bg: #ffffff;
-  --input-bg: #ffffff;
-  --border-color: #ddd;
-  --text-color: #111827;
-  --primary-color: #1976d2;
-  --primary-hover: #1565c0;
+/* Dark mode overrides */
+.dark-mode .sidebar {
+  background: #111827;
+  border-color: #4b5563;
 }
-
-.dark-mode {
-  --bg-color: #1f2937;
-  --sidebar-bg: #111827;
-  --card-bg: #374151;
-  --input-bg: #374151;
-  --border-color: #4b5563;
-  --text-color: #f9fafb;
-  --primary-color: #2563eb;
-  --primary-hover: #1e40af;
+.dark-mode .main-content {
+  background: #1f2937;
 }
-
-/* Responsividade */
-@media (max-width: 768px) {
-  .sidebar {
-    width: 100%;
-    border-right: none;
-    border-bottom: 1px solid var(--border-color);
-    padding: 10px 15px;
-  }
-
-  .main-content {
-    padding: 15px 10px 30px;
-  }
-
-  .header-search {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
-  }
-
-  .header-search h1 {
-    font-size: 1.5rem;
-  }
-
-  .input-field {
-    max-width: 100%;
-  }
-
-  .button {
-    width: 100%;
-    padding: 10px;
-  }
-
-  .user-card {
-    padding: 12px;
-  }
+.dark-mode .header-search h1,
+.dark-mode .search-controls .input-field,
+.dark-mode .user-card {
+  color: #f9fafb;
+}
+.dark-mode .input-field {
+  background: #374151;
+  border-color: #4b5563;
+}
+.dark-mode .user-card {
+  background: #374151;
+  border-color: #4b5563;
 }
 </style>

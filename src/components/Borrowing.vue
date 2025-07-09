@@ -288,6 +288,8 @@ body.dark-mode .input-field {
   border: none;
   border-radius: 0.25rem;
   cursor: pointer;
+  background-color: #3b82f6
+  ;
 }
 
 .table-wrapper {

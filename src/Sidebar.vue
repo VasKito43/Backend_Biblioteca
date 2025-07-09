@@ -51,10 +51,6 @@
       @click="sidebarVisible = false"
     ></div>
 
-    <!-- Conteúdo principal -->
-    <div class="main-content">
-      <slot />
-    </div>
   </div>
 </template>
 
@@ -212,7 +208,6 @@ export default {
 }
 
 .main-content {
-  margin-left: 260px;
   flex: 1;
   padding: 20px;
   overflow-y: auto;
@@ -220,16 +215,22 @@ export default {
   transition: margin-left 0.3s ease;
 }
 
-.sidebar.collapsed ~ .main-content {
+/* margem padrão com sidebar aberta */
+.main-content {
+  margin-left: 260px;
+}
+
+/* margem reduzida quando sidebar está colapsada */
+.main-content.collapsed {
   margin-left: 48px;
 }
 
+/* em mobile, sem margem lateral */
 @media (max-width: 1024px) {
-  .hamburger-btn {
-    display: block;
-  }
-  .main-content {
-    margin-left: 0;
+  .main-content,
+  .main-content.collapsed {
+    margin-left: 0 !important;
   }
 }
+
 </style>

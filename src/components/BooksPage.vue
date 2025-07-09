@@ -140,14 +140,23 @@ export default {
   display: flex;
   min-height: 100vh;
   background-color: #f9fafb;
+  color: #1a202c;
 }
-.dark-mode .container {
-  background-color: #2d3748;
+
+.dark-mode {
+  background-color: #1a202c;
+  color: #f7fafc;
 }
+
+.dark-mode .main-content {
+  background-color: #1a202c;
+}
+
 .main-content {
   flex: 1;
   padding: 1.5rem;
 }
+
 .filters {
   display: flex;
   flex-wrap: wrap;
@@ -155,37 +164,73 @@ export default {
   justify-content: space-between;
   margin-bottom: 1.5rem;
 }
+
 .filter-controls {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
 }
+
+/* INPUT */
 .input {
   padding: 0.5rem;
   border: 1px solid #cbd5e1;
   border-radius: 0.375rem;
   width: 12rem;
   background-color: #ffffff;
+  color: #1a202c;
 }
+
+.input::placeholder {
+  color: #94a3b8;
+}
+
+.dark-mode .input {
+  background-color: #2d3748;
+  color: #f1f5f9;
+  border: 1px solid #4a5568;
+}
+
+.dark-mode .input::placeholder {
+  color: #cbd5e1;
+}
+
+/* BUTTONS */
 .button {
   padding: 0.5rem 1rem;
   border-radius: 0.375rem;
   border: none;
   cursor: pointer;
+  transition: background-color 0.2s;
 }
+
 .filter-button {
   background-color: #e2e8f0;
   color: #2d3748;
 }
+
 .search-button {
   background-color: #3b82f6;
   color: #ffffff;
 }
+
+.dark-mode .filter-button {
+  background-color: #4a5568;
+  color: #e2e8f0;
+}
+
+.dark-mode .search-button {
+  background-color: #2563eb;
+  color: #ffffff;
+}
+
+/* LIVROS */
 .books-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 1rem;
 }
+
 .book-card {
   background-color: #ffffff;
   border-radius: 0.5rem;
@@ -197,40 +242,54 @@ export default {
   text-decoration: none;
   color: inherit;
 }
+
 .book-card:hover {
   transform: translateY(-4px);
 }
+
 .image-wrapper {
   width: 100%;
   height: 300px;
   overflow: hidden;
 }
+
 .book-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
+
 .book-title {
   font-size: 1.125rem;
   font-weight: 600;
   margin: 0.75rem;
 }
+
 .book-meta {
   font-size: 0.875rem;
   color: #4a5568;
   padding: 0 0.75rem;
 }
+
 .book-description {
   font-size: 0.875rem;
   color: #4a5568;
   padding: 0 0.75rem 0.75rem;
   flex-grow: 1;
 }
+
+/* DARK MODE: CARD LIVROS */
 .dark-mode .book-card {
-  background-color: #4a5568;
+  background-color: #2d3748;
+  color: #f7fafc;
 }
+
 .dark-mode .book-meta,
 .dark-mode .book-description {
-  color: #e2e8f0;
+  color: #cbd5e1;
+}
+
+.dark-mode .book-title {
+  color: #f1f5f9;
 }
 </style>
